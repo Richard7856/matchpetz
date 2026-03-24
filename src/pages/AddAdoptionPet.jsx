@@ -40,7 +40,7 @@ const AddAdoptionPet = () => {
     };
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg-soft)', display: 'flex', flexDirection: 'column' }} className="fade-in">
+        <div style={{ minHeight: '100%', backgroundColor: 'var(--color-bg-soft)', display: 'flex', flexDirection: 'column' }} className="fade-in">
             <div className="form-header">
                 <button className="form-back-btn" onClick={() => navigate(-1)}>
                     <ArrowLeft size={22} color="var(--color-text-dark)" />

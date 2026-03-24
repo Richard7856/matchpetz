@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Calendar, CheckCircle, AlertTriangle, Plus, CalendarCheck, MapPin, Filter, Users } from 'lucide-react';
+import { Heart, ShoppingBag, Calendar, CheckCircle, AlertTriangle, Plus, CalendarCheck, MapPin, Filter, Users } from 'lucide-react';
 import useIsMobile from '../hooks/useIsMobile';
 import { supabase } from '../supabase';
 import { getAvatarUrl } from '../utils/avatar';
@@ -78,6 +78,7 @@ const Home = () => {
     const ACTION_ITEMS = [
         { path: '/adoption', bg: '#ffeaba', icon: <Heart size={28} color="var(--color-primary)" fill="var(--color-primary)" />, label: 'Adopcion' },
         { path: '/alerts', bg: '#ffebee', icon: <AlertTriangle size={28} color="#e53935" />, label: 'Alertas' },
+        { path: '/marketplace', bg: '#e8f5e9', icon: <ShoppingBag size={28} color="#4caf50" />, label: 'Tienda' },
         { path: '/appointments', bg: '#e3f2fd', icon: <CalendarCheck size={28} color="#2196f3" />, label: 'Citas' },
     ];
 

@@ -61,7 +61,7 @@ const EditProfile = () => {
         navigate('/profile');
     };
 
-    if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--color-text-light)' }}>Cargando...</div>;
+    if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-light)' }}>Cargando...</div>;
 
     return (
         <div style={styles.container} className="fade-in">
@@ -123,7 +123,7 @@ const EditProfile = () => {
 };
 
 const styles = {
-    container: { minHeight: '100vh', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
+    container: { minHeight: '100%', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
     errorBox: { margin: '0 1.5rem', padding: '0.75rem', borderRadius: '10px', backgroundColor: '#fef2f2', color: '#b91c1c', fontSize: '0.9rem' },
     formContainer: { padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', flex: 1 },
     inputGroup: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },

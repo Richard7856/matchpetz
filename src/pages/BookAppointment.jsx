@@ -63,8 +63,8 @@ const BookAppointment = () => {
         navigate('/appointments');
     };
 
-    if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}><LoadingState /></div>;
-    if (!businessRole) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--color-text-light)' }}>Negocio no encontrado</div>;
+    if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><LoadingState /></div>;
+    if (!businessRole) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-light)' }}>Negocio no encontrado</div>;
 
     const cfg = ROLE_CONFIG[businessRole.role_type] || {};
 
@@ -122,7 +122,7 @@ const BookAppointment = () => {
 };
 
 const styles = {
-    container: { minHeight: '100vh', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
+    container: { minHeight: '100%', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
     businessCard: { display: 'flex', alignItems: 'center', gap: '1rem', margin: '1rem 1.5rem', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '16px' },
     roleIconBg: { width: 48, height: 48, borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     errorBox: { margin: '0 1.5rem', padding: '0.75rem', borderRadius: '10px', backgroundColor: '#fef2f2', color: '#b91c1c', fontSize: '0.9rem' },

@@ -230,8 +230,8 @@ const AdoptionDetail = () => {
 };
 
 const styles = {
-    container: { minHeight: '100vh', backgroundColor: 'var(--color-bg-soft)', paddingBottom: '2rem' },
-    loading: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--color-text-light)' },
+    container: { minHeight: '100%', backgroundColor: 'var(--color-bg-soft)', paddingBottom: '2rem' },
+    loading: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-light)' },
     hero: {
         width: '100%',
         height: '320px',

@@ -121,7 +121,7 @@ const ProductDetail = () => {
 
 const styles = {
     container: {
-        minHeight: '100vh',
+        minHeight: '100%',
         backgroundColor: 'var(--color-bg-soft)',
         paddingBottom: '2rem',
     },
@@ -129,7 +129,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100vh',
+        height: '100%',
         color: 'var(--color-text-light)',
     },
     hero: {

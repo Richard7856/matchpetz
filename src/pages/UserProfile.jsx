@@ -163,7 +163,7 @@ const UserProfile = () => {
 
 const styles = {
     container: { minHeight: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f5f5f5' },
-    loading: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--color-text-light)' },
+    loading: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-light)' },
     content: { padding: '1.5rem', flex: 1, overflowY: 'auto' },
     profileCard: { backgroundColor: '#fff', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '1.5rem' },
     avatarSection: { display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem' },

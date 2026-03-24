@@ -124,7 +124,7 @@ const MarketplaceDashboard = () => {
 };
 
 const styles = {
-    container: { minHeight: '100vh', backgroundColor: 'var(--color-bg-soft)', display: 'flex', flexDirection: 'column' },
+    container: { minHeight: '100%', backgroundColor: 'var(--color-bg-soft)', display: 'flex', flexDirection: 'column' },
     header: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', backgroundColor: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 10 },
     backBtn: { background: 'none', border: 'none', padding: '0.25rem', cursor: 'pointer', width: 'auto', display: 'flex', alignItems: 'center' },
     title: { fontSize: '1.15rem', fontWeight: '700', margin: 0, color: 'var(--color-text-dark)', flex: 1 },

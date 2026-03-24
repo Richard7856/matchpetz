@@ -69,8 +69,8 @@ const PetProfile = () => {
 };
 
 const styles = {
-    container: { minHeight: '100vh', backgroundColor: 'var(--color-bg-soft)' },
-    loading: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--color-text-light)' },
+    container: { minHeight: '100%', backgroundColor: 'var(--color-bg-soft)' },
+    loading: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-light)' },
     hero: { width: '100%', height: '240px', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' },
     backBtn: { position: 'absolute', top: '1rem', left: '1rem', background: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
     content: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' },
