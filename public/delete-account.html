@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eliminar cuenta — MatchPetz</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; color: #1a1a1a; line-height: 1.7; }
+        .header { background: linear-gradient(135deg, #f5a623, #e8872a); padding: 2rem 1.5rem; text-align: center; color: #fff; }
+        .header img { width: 48px; height: 48px; border-radius: 12px; margin-bottom: 0.5rem; }
+        .header h1 { font-size: 1.5rem; font-weight: 700; }
+        .header p { opacity: 0.9; font-size: 0.9rem; margin-top: 0.25rem; }
+        .container { max-width: 600px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+        .card { background: #fff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem; }
+        .card h2 { font-size: 1.15rem; margin-bottom: 0.75rem; color: #1a1a1a; }
+        .card p, .card li { font-size: 0.92rem; color: #555; margin-bottom: 0.5rem; }
+        .card ul { padding-left: 1.25rem; margin-bottom: 1rem; }
+        .card ul li { margin-bottom: 0.4rem; }
+        .warning { background: #fef3cd; border-left: 4px solid #ffc107; padding: 1rem 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem; font-size: 0.9rem; color: #664d03; }
+        .steps { counter-reset: step; }
+        .step { display: flex; gap: 1rem; margin-bottom: 1.25rem; align-items: flex-start; }
+        .step-num { counter-increment: step; width: 32px; height: 32px; border-radius: 50%; background: #ee9d2b; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+        .step-num::before { content: counter(step); }
+        .step-body h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.15rem; }
+        .step-body p { font-size: 0.88rem; color: #666; }
+        .email-btn { display: inline-block; background: #ee9d2b; color: #fff; text-decoration: none; padding: 0.85rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1rem; margin-top: 0.5rem; text-align: center; }
+        .email-btn:hover { background: #d88a1f; }
+        .footer { text-align: center; padding: 2rem 1rem; color: #999; font-size: 0.8rem; border-top: 1px solid #eee; }
+        .footer a { color: #ee9d2b; text-decoration: none; }
+        .badge { display: inline-block; background: #fee2e2; color: #dc2626; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 8px; margin-left: 0.25rem; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <img src="/logo.png" alt="MatchPetz">
+    <h1>Solicitud de eliminacion de cuenta</h1>
+    <p>MatchPetz — Proteccion de datos personales</p>
+</div>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Tu privacidad es importante</h2>
+        <p>En MatchPetz respetamos tu derecho a la proteccion de datos personales conforme a la Ley Federal de Proteccion de Datos Personales en Posesion de los Particulares (LFPDPPP).</p>
+        <p>Puedes solicitar la eliminacion completa de tu cuenta y todos los datos asociados en cualquier momento.</p>
+    </div>
+
+    <div class="warning">
+        <strong>Importante:</strong> La eliminacion de cuenta es permanente e irreversible. Todos tus datos, publicaciones, conversaciones, mascotas registradas y notificaciones seran eliminados.
+    </div>
+
+    <div class="card">
+        <h2>Datos que se eliminaran <span class="badge">Permanente</span></h2>
+        <ul>
+            <li>Perfil de usuario (nombre, foto, ubicacion)</li>
+            <li>Mascotas registradas y publicaciones de adopcion</li>
+            <li>Alertas de mascotas perdidas</li>
+            <li>Conversaciones y mensajes</li>
+            <li>Resenas y comentarios</li>
+            <li>Historial de eventos e inscripciones</li>
+            <li>Productos publicados en marketplace</li>
+            <li>Roles de negocio y citas</li>
+            <li>Notificaciones y tokens de push</li>
+            <li>Cualquier otro dato asociado a tu cuenta</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Como solicitar la eliminacion</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num"></div>
+                <div class="step-body">
+                    <h3>Envia un correo</h3>
+                    <p>Escribe a <strong>contacto@matchpetz.com</strong> desde el correo registrado en tu cuenta.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num"></div>
+                <div class="step-body">
+                    <h3>Incluye en el asunto</h3>
+                    <p>"Solicitud de eliminacion de cuenta — [tu email de registro]"</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num"></div>
+                <div class="step-body">
+                    <h3>Verificacion de identidad</h3>
+                    <p>Confirmaremos tu identidad respondiendo al correo registrado.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num"></div>
+                <div class="step-body">
+                    <h3>Procesamiento</h3>
+                    <p>Tu cuenta y datos seran eliminados en un plazo maximo de <strong>30 dias habiles</strong> conforme a la LFPDPPP.</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 1rem;">
+            <a href="mailto:contacto@matchpetz.com?subject=Solicitud%20de%20eliminacion%20de%20cuenta&body=Solicito%20la%20eliminacion%20completa%20de%20mi%20cuenta%20y%20datos%20personales%20en%20MatchPetz.%0A%0ACorreo%20registrado%3A%20%0A%0AGracias." class="email-btn">
+                Enviar solicitud por correo
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Derechos ARCO</h2>
+        <p>Conforme a la LFPDPPP, tienes derecho a:</p>
+        <ul>
+            <li><strong>Acceso:</strong> Conocer que datos tenemos sobre ti</li>
+            <li><strong>Rectificacion:</strong> Corregir datos inexactos</li>
+            <li><strong>Cancelacion:</strong> Solicitar la eliminacion de tus datos</li>
+            <li><strong>Oposicion:</strong> Oponerte al tratamiento de tus datos</li>
+        </ul>
+        <p>Para ejercer cualquiera de estos derechos, contactanos en <strong>contacto@matchpetz.com</strong></p>
+    </div>
+
+    <div class="card">
+        <h2>Tiempo de retencion</h2>
+        <p>Tras la solicitud de eliminacion:</p>
+        <ul>
+            <li>Tu cuenta se desactiva inmediatamente</li>
+            <li>Tus datos se eliminan en maximo 30 dias habiles</li>
+            <li>Algunos datos pueden conservarse por obligacion legal (transacciones fiscales) por el plazo legalmente requerido</li>
+        </ul>
+    </div>
+
+</div>
+
+<div class="footer">
+    <p>&copy; 2025 MatchPetz — <a href="/legal.html#terminos">Terminos</a> · <a href="/legal.html#privacidad">Privacidad</a></p>
+    <p style="margin-top: 0.5rem;">contacto@matchpetz.com</p>
+</div>
+
+</body>
+</html>
