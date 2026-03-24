@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Send, MoreVertical, Users, Image, Smile } from 'lucide-react';
 import { supabase } from '../supabase';
-import { getAvatarUrl } from '../utils/avatar';
+import { getAvatarUrl, getInitials } from '../utils/avatar';
 import { useAuth } from '../contexts/AuthContext';
 import { formatChatTime } from '../utils/formatters';
 
@@ -224,8 +224,8 @@ const ChatRoom = () => {
 
                 {isGroup ? (
                     <div style={styles.groupAvatarWrap}>
-                        {otherAvatar ? (
-                            <img src={otherAvatar} alt="" style={styles.groupAvatar} loading="lazy" />
+                        {getAvatarUrl(otherAvatar) ? (
+                            <img src={getAvatarUrl(otherAvatar)} alt="" style={styles.groupAvatar} loading="lazy" />
                         ) : (
                             <div style={styles.groupAvatarPlaceholder}>
                                 <Users size={18} color="#fff" />
@@ -233,18 +233,19 @@ const ChatRoom = () => {
                         )}
                     </div>
                 ) : (
-                    <img
-                        src={getAvatarUrl(otherAvatar, id)}
-                        alt=""
-                        style={styles.headerAvatar}
-                        loading="lazy"
-                    />
+                    getAvatarUrl(otherAvatar) ? (
+                        <img src={getAvatarUrl(otherAvatar)} alt="" style={styles.headerAvatar} loading="lazy" />
+                    ) : (
+                        <div style={styles.headerAvatarFallback}>
+                            <span style={styles.headerAvatarInitial}>{getInitials(otherName)}</span>
+                        </div>
+                    )
                 )}
 
                 <div style={styles.headerInfo}>
                     <h3 style={styles.headerName}>{otherName}</h3>
                     <span style={styles.headerStatus}>
-                        {isGroup ? `${participantCount} participantes` : 'En linea'}
+                        {isGroup ? `${participantCount} participantes` : 'MatchPetz'}
                     </span>
                 </div>
 
@@ -286,12 +287,15 @@ const ChatRoom = () => {
                             <div style={{ ...styles.msgRow, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
                                 {/* Group avatar */}
                                 {isGroup && !isOwn && (
-                                    <img
-                                        src={getAvatarUrl(senderProfile?.avatar_url, msg.sender_id)}
-                                        alt=""
-                                        style={styles.msgAvatar}
-                                        loading="lazy"
-                                    />
+                                    getAvatarUrl(senderProfile?.avatar_url) ? (
+                                        <img src={getAvatarUrl(senderProfile?.avatar_url)} alt="" style={styles.msgAvatar} loading="lazy" />
+                                    ) : (
+                                        <div style={styles.msgAvatarFallback}>
+                                            <span style={{ fontSize: '0.6rem', fontWeight: '700', color: '#fff' }}>
+                                                {getInitials(senderProfile?.display_name || msg.sender_name)}
+                                            </span>
+                                        </div>
+                                    )
                                 )}
                                 <div style={{
                                     ...styles.bubble,
@@ -302,7 +306,7 @@ const ChatRoom = () => {
                                             {senderProfile?.display_name || msg.sender_name || 'Usuario'}
                                         </span>
                                     )}
-                                    <p style={styles.msgText}>{msg.content}</p>
+                                    <p style={{ ...styles.msgText, color: isOwn ? '#fff' : '#1a1a2e' }}>{msg.content}</p>
                                     <span style={{
                                         ...styles.msgTime,
                                         color: isOwn ? 'rgba(255,255,255,0.65)' : 'var(--color-text-light)',
@@ -379,6 +383,22 @@ const styles = {
         borderRadius: '50%',
         objectFit: 'cover',
         border: '2px solid rgba(255,255,255,0.3)',
+    },
+    headerAvatarFallback: {
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        backgroundColor: 'var(--color-primary)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '2px solid rgba(255,255,255,0.3)',
+        flexShrink: 0,
+    },
+    headerAvatarInitial: {
+        color: '#fff',
+        fontSize: '1rem',
+        fontWeight: '700',
     },
     groupAvatarWrap: { width: 40, height: 40, flexShrink: 0 },
     groupAvatar: {
@@ -473,6 +493,11 @@ const styles = {
         width: 26, height: 26, borderRadius: '50%',
         objectFit: 'cover', flexShrink: 0,
     },
+    msgAvatarFallback: {
+        width: 26, height: 26, borderRadius: '50%',
+        backgroundColor: 'var(--color-primary)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    },
     bubble: {
         maxWidth: '78%',
         padding: '0.6rem 0.85rem',
@@ -503,6 +528,7 @@ const styles = {
         fontSize: '0.93rem',
         lineHeight: 1.45,
         wordBreak: 'break-word',
+        color: 'inherit',
     },
     msgTime: {
         fontSize: '0.65rem',
