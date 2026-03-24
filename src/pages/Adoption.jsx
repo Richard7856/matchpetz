@@ -79,6 +79,14 @@ const Adoption = () => {
                         sender_id: user.id,
                         content: `Hola! Me interesa adoptar a ${pet.name} 🐾`,
                     });
+                    // Notify pet owner (fire-and-forget)
+                    supabase.from('notifications').insert({
+                        user_id: pet.user_id,
+                        type: 'adoption',
+                        title: `Alguien esta interesado en adoptar a ${pet.name}`,
+                        body: 'Tienes un nuevo mensaje sobre tu mascota en adopcion',
+                        entity_id: conv.id,
+                    });
                     navigate(`/chat/${conv.id}`);
                     return;
                 }

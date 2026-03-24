@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Edit2, LogOut, ChevronRight, Award, Shield, Heart, Trash2, Plus, Star, PawPrint } from 'lucide-react';
+import { Settings, Edit2, LogOut, ChevronRight, Award, Shield, Heart, Trash2, Plus, Star, PawPrint, MessageCircle } from 'lucide-react';
 import { supabase } from '../supabase';
 import { getAvatarUrl } from '../utils/avatar';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +18,7 @@ const Profile = () => {
     const [myPets, setMyPets] = useState([]);
     const [myPersonalPets, setMyPersonalPets] = useState([]);
     const [myRoles, setMyRoles] = useState([]);
+    const [myAdoptions, setMyAdoptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState(null);
 
@@ -25,17 +26,19 @@ const Profile = () => {
         if (!user) return;
         const load = async () => {
             try {
-                const [profileRes, petsRes, rolesRes, personalPetsRes] = await Promise.all([
+                const [profileRes, petsRes, rolesRes, personalPetsRes, adoptionConvsRes] = await Promise.all([
                     supabase.from('profiles').select('id, display_name, email, avatar_url, stats, instagram, facebook, twitter, tiktok').eq('id', user.id).single(),
                     supabase.from('adoption_pets').select('id, name, type, image_url, status').eq('user_id', user.id).order('created_at', { ascending: false }),
                     supabase.from('business_roles').select('id, role_type, business_name, status, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
                     supabase.from('pets').select('id, name, species, breed, image_url').eq('owner_id', user.id).order('created_at', { ascending: false }),
+                    supabase.from('conversations').select('id, user2_id, last_message, participant_name, created_at').eq('user1_id', user.id).like('last_message', 'Me interesa adoptar a %').order('created_at', { ascending: false }).limit(20),
                 ]);
                 if (profileRes.error) throw profileRes.error;
                 setProfile(profileRes.data || null);
                 setMyPets(petsRes.data || []);
                 setMyPersonalPets(personalPetsRes.data || []);
                 setMyRoles(rolesRes.data || []);
+                setMyAdoptions(adoptionConvsRes.data || []);
             } catch (err) {
                 setLoadError('No se pudo cargar el perfil.');
             } finally {
@@ -206,14 +209,32 @@ const Profile = () => {
                         <span style={styles.optionText}>Privacidad y Seguridad</span>
                         <ChevronRight size={20} color="var(--color-text-light)" />
                     </div>
-                    <div style={styles.optionItem}>
-                        <div style={{ ...styles.optionIconBg, backgroundColor: '#eefdf2' }}>
-                            <Award size={20} color="var(--color-social)" />
-                        </div>
-                        <span style={styles.optionText}>Mis Impactos (Adopciones)</span>
-                        <ChevronRight size={20} color="var(--color-text-light)" />
-                    </div>
                 </div>
+
+                {/* Mis Adopciones — mascotas por las que mostré interés */}
+                {myAdoptions.length > 0 && (
+                    <div style={styles.optionsSection}>
+                        <h4 style={styles.sectionTitle}>Mis Adopciones ({myAdoptions.length})</h4>
+                        {myAdoptions.map((conv) => {
+                            const petName = conv.last_message?.replace('Me interesa adoptar a ', '') || 'Mascota';
+                            return (
+                                <div key={conv.id} style={styles.optionItem} onClick={() => navigate(`/chat/${conv.id}`)}>
+                                    <div style={{ ...styles.optionIconBg, backgroundColor: '#fce4ec' }}>
+                                        <Heart size={20} color="#e91e63" />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <span style={styles.optionText}>{petName}</span>
+                                        <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>
+                                            <MessageCircle size={12} style={{ verticalAlign: 'middle', marginRight: '0.25rem' }} />
+                                            Contactado · {conv.participant_name || 'Usuario'}
+                                        </p>
+                                    </div>
+                                    <ChevronRight size={20} color="var(--color-text-light)" />
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {/* Mis mascotas en adopción */}
                 {myPets.length > 0 && (
@@ -244,8 +265,8 @@ const Profile = () => {
                 )}
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
-                    <a href="/terminos.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-text-light)', fontSize: '0.85rem', textDecoration: 'none' }}>Terminos y Condiciones</a>
-                    <a href="/privacidad.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-text-light)', fontSize: '0.85rem', textDecoration: 'none' }}>Politica de Privacidad</a>
+                    <a href="/legal.html#terminos" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-text-light)', fontSize: '0.85rem', textDecoration: 'none' }}>Terminos y Condiciones</a>
+                    <a href="/legal.html#privacidad" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-text-light)', fontSize: '0.85rem', textDecoration: 'none' }}>Politica de Privacidad</a>
                 </div>
 
                 <button style={styles.logoutBtn} onClick={handleLogout}>

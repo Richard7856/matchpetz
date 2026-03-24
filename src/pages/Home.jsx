@@ -25,7 +25,7 @@ const Home = () => {
             try {
                 const { data: list, error } = await supabase
                     .from('events')
-                    .select('id, title, event_date, event_time, location, image_url, creator_name, creator_avatar_url, created_at')
+                    .select('id, title, event_date, event_time, location, image_url, creator_name, creator_avatar_url, creator_id, created_at')
                     .order('event_date', { ascending: true })
                     .limit(50);
                 let attendeeIds = [];
@@ -58,7 +58,20 @@ const Home = () => {
             if (!error) setEvents(events.map((x) => (x.id === eventId ? { ...x, attending: false } : x)));
         } else {
             const { error } = await supabase.from('event_attendees').insert({ event_id: eventId, user_id: user.id });
-            if (!error) setEvents(events.map((x) => (x.id === eventId ? { ...x, attending: true } : x)));
+            if (!error) {
+                setEvents(events.map((x) => (x.id === eventId ? { ...x, attending: true } : x)));
+                // Notify event creator (fire-and-forget)
+                if (ev.creator_id && ev.creator_id !== user.id) {
+                    const { data: myProfile } = await supabase.from('profiles').select('display_name').eq('id', user.id).maybeSingle();
+                    supabase.from('notifications').insert({
+                        user_id: ev.creator_id,
+                        type: 'event',
+                        title: `${myProfile?.display_name || 'Alguien'} se inscribio a tu evento`,
+                        body: ev.title,
+                        entity_id: ev.id,
+                    });
+                }
+            }
         }
     };
 

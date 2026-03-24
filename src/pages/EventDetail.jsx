@@ -122,6 +122,18 @@ const EventDetail = () => {
                 setAttending(true);
                 setAttendeeCount(c => c + 1);
 
+                // Notify event creator (fire-and-forget)
+                if (event.creator_id && event.creator_id !== user.id) {
+                    const displayName = authProfile?.display_name || 'Alguien';
+                    supabase.from('notifications').insert({
+                        user_id: event.creator_id,
+                        type: 'event',
+                        title: `${displayName} se inscribio a tu evento`,
+                        body: event.title,
+                        entity_id: event.id,
+                    });
+                }
+
                 // Find or create group conversation
                 let convId = null;
                 const { data: existingConv } = await supabase

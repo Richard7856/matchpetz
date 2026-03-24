@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Bell, Calendar, Star, MessageSquare, Users,
+    Bell, Calendar, Star, MessageSquare, Users, Heart,
     CheckCheck, Trash2,
 } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -15,6 +15,7 @@ const TYPE_CONFIG = {
     review: { icon: Star, color: '#ff9800', bg: '#fff3e0', label: 'Reseña' },
     message: { icon: MessageSquare, color: '#13ec5b', bg: '#e8f5e9', label: 'Mensaje' },
     event: { icon: Users, color: '#9c27b0', bg: '#f3e5f5', label: 'Evento' },
+    adoption: { icon: Heart, color: '#e91e63', bg: '#fce4ec', label: 'Adopcion' },
 };
 
 const Notifications = () => {
@@ -62,6 +63,7 @@ const Notifications = () => {
                 case 'appointment': navigate('/appointments'); break;
                 case 'event': navigate(`/events/${notif.entity_id}`); break;
                 case 'message': navigate(`/chat/${notif.entity_id}`); break;
+                case 'adoption': navigate(`/chat/${notif.entity_id}`); break;
                 default: break;
             }
         }
