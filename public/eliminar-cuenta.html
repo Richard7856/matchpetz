@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eliminar mi cuenta — MatchPetz</title>
+<meta name="description" content="Solicita la eliminación de tu cuenta y datos personales en MatchPetz.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',-apple-system,sans-serif;background:#f8f9fa;color:#1a1a2e;line-height:1.7;-webkit-font-smoothing:antialiased}
+.header{background:linear-gradient(135deg,#f5a623,#e8872a);padding:2rem 1.5rem;text-align:center;color:#fff}
+.header img{width:56px;height:56px;border-radius:14px;margin-bottom:.75rem;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.header h1{font-size:1.6rem;font-weight:800;margin-bottom:.25rem}
+.header p{opacity:.9;font-size:.9rem}
+.container{max-width:640px;margin:0 auto;padding:1.5rem}
+.card{background:#fff;border-radius:16px;padding:2rem;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:1.5rem}
+.card h2{font-size:1.2rem;font-weight:700;margin-bottom:1rem;color:#1a1a2e}
+.card h3{font-size:1rem;font-weight:600;margin:1.25rem 0 .5rem;color:#333}
+.card p,.card li{font-size:.9rem;color:#555;margin-bottom:.5rem}
+.card ul{padding-left:1.25rem;margin-bottom:1rem}
+.card ul li{margin-bottom:.4rem}
+.card ul li::marker{color:#ee9d2b}
+.warning{background:#fff8e1;border-left:4px solid #ffc107;padding:1rem 1.25rem;border-radius:0 10px 10px 0;margin:1rem 0;font-size:.85rem;color:#5d4e37;line-height:1.6}
+.info{background:#e8f4fd;border-left:4px solid #2196f3;padding:1rem 1.25rem;border-radius:0 10px 10px 0;margin:1rem 0;font-size:.85rem;color:#1a3a5c;line-height:1.6}
+.steps{counter-reset:step}
+.step{display:flex;gap:1rem;margin-bottom:1.25rem;align-items:flex-start}
+.step-num{counter-increment:step;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ee9d2b,#e8872a);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0}
+.step-content{flex:1}
+.step-content strong{display:block;font-size:.95rem;margin-bottom:.15rem;color:#1a1a2e}
+.step-content span{font-size:.85rem;color:#666}
+.form-group{margin-bottom:1rem}
+.form-label{display:block;font-size:.85rem;font-weight:600;margin-bottom:.4rem;color:#333}
+.form-input,.form-textarea,.form-select{width:100%;padding:.75rem 1rem;border:1.5px solid #e0e0e0;border-radius:10px;font-size:.9rem;font-family:inherit;background:#fff;outline:none;transition:border-color .2s,box-shadow .2s}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:#ee9d2b;box-shadow:0 0 0 3px rgba(238,157,43,.1)}
+.form-textarea{resize:vertical;min-height:80px}
+.checkbox-group{display:flex;align-items:flex-start;gap:.6rem;margin:1rem 0}
+.checkbox-group input[type="checkbox"]{margin-top:.25rem;accent-color:#ee9d2b;width:18px;height:18px;flex-shrink:0}
+.checkbox-group label{font-size:.85rem;color:#555;line-height:1.5}
+.submit-btn{width:100%;padding:.9rem;border:none;border-radius:50px;background:linear-gradient(135deg,#e53935,#c62828);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;margin-top:.5rem}
+.submit-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(229,57,53,.3)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.success{display:none;text-align:center;padding:2rem}
+.success-icon{font-size:3rem;margin-bottom:1rem}
+.success h2{color:#2e7d32;margin-bottom:.5rem}
+.success p{color:#666;font-size:.9rem}
+.footer{text-align:center;padding:2rem 1rem;color:#999;font-size:.8rem}
+.footer a{color:#ee9d2b;text-decoration:none}
+.data-table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.85rem}
+.data-table th,.data-table td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid #f0f0f0}
+.data-table th{background:#f8f9fa;font-weight:600;color:#555;font-size:.8rem}
+.data-table td:first-child{font-weight:500;color:#333}
+@media(max-width:480px){.container{padding:1rem}.card{padding:1.5rem}}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <img src="/logo.png" alt="MatchPetz">
+    <h1>Eliminar mi cuenta</h1>
+    <p>Solicitud de eliminacion de datos personales</p>
+</div>
+
+<div class="container">
+
+    <!-- Info -->
+    <div class="card">
+        <h2>Tu privacidad es importante</h2>
+        <p>En MatchPetz respetamos tu derecho a controlar tus datos personales. Puedes solicitar la eliminacion completa de tu cuenta y todos los datos asociados en cualquier momento.</p>
+
+        <div class="info">
+            <strong>Derechos ARCO:</strong> Conforme a la Ley Federal de Proteccion de Datos Personales en Posesion de los Particulares (LFPDPPP), tienes derecho de Acceso, Rectificacion, Cancelacion y Oposicion sobre tus datos personales.
+        </div>
+    </div>
+
+    <!-- What gets deleted -->
+    <div class="card">
+        <h2>Que datos se eliminan</h2>
+        <p>Al solicitar la eliminacion de tu cuenta, se eliminaran permanentemente:</p>
+
+        <table class="data-table">
+            <thead>
+                <tr><th>Tipo de dato</th><th>Accion</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Perfil (nombre, foto, ubicacion)</td><td>Eliminado permanentemente</td></tr>
+                <tr><td>Publicaciones de adopcion</td><td>Eliminadas permanentemente</td></tr>
+                <tr><td>Alertas de mascotas perdidas</td><td>Eliminadas permanentemente</td></tr>
+                <tr><td>Mensajes y conversaciones</td><td>Eliminados permanentemente</td></tr>
+                <tr><td>Mascotas registradas</td><td>Eliminadas permanentemente</td></tr>
+                <tr><td>Resenas y comentarios</td><td>Eliminados permanentemente</td></tr>
+                <tr><td>Productos del marketplace</td><td>Eliminados permanentemente</td></tr>
+                <tr><td>Servicios publicados</td><td>Eliminados permanentemente</td></tr>
+                <tr><td>Citas y eventos</td><td>Eliminados permanentemente</td></tr>
+                <tr><td>Imagenes subidas</td><td>Eliminadas permanentemente</td></tr>
+                <tr><td>Credenciales de acceso</td><td>Eliminadas permanentemente</td></tr>
+            </tbody>
+        </table>
+
+        <div class="warning">
+            <strong>Importante:</strong> Esta accion es irreversible. Una vez procesada la solicitud, no podremos recuperar tus datos. Si solo deseas desactivar temporalmente tu cuenta, contactanos antes de enviar esta solicitud.
+        </div>
+    </div>
+
+    <!-- Process -->
+    <div class="card">
+        <h2>Como funciona el proceso</h2>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Envia tu solicitud</strong>
+                <span>Llena el formulario de abajo con tu email registrado</span>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Verificacion de identidad</strong>
+                <span>Te enviaremos un correo para confirmar que eres el titular de la cuenta</span>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Procesamiento</strong>
+                <span>Tu solicitud sera procesada en un plazo maximo de 15 dias habiles</span>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+                <strong>Confirmacion</strong>
+                <span>Recibiras un correo confirmando la eliminacion completa de tus datos</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="card" id="form-card">
+        <h2>Solicitar eliminacion</h2>
+
+        <form id="deleteForm" onsubmit="handleSubmit(event)">
+            <div class="form-group">
+                <label class="form-label">Correo electronico registrado *</label>
+                <input type="email" class="form-input" id="email" required placeholder="tu@correo.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nombre de usuario o nombre completo</label>
+                <input type="text" class="form-input" id="name" placeholder="Como aparece en tu perfil">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Motivo de la solicitud</label>
+                <select class="form-select" id="reason">
+                    <option value="">Selecciona un motivo (opcional)</option>
+                    <option value="no-uso">Ya no uso la aplicacion</option>
+                    <option value="privacidad">Preocupaciones de privacidad</option>
+                    <option value="otra-app">Prefiero otra aplicacion</option>
+                    <option value="experiencia">No me gusto la experiencia</option>
+                    <option value="otro">Otro motivo</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Comentarios adicionales</label>
+                <textarea class="form-textarea" id="comments" placeholder="Cuentanos mas sobre tu decision (opcional)..."></textarea>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="confirm1" required>
+                <label for="confirm1">Entiendo que esta accion es <strong>irreversible</strong> y que todos mis datos, publicaciones, mensajes e imagenes seran eliminados permanentemente.</label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="confirm2" required>
+                <label for="confirm2">Confirmo que soy el titular de la cuenta asociada al correo electronico proporcionado.</label>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Solicitar eliminacion de mi cuenta</button>
+        </form>
+    </div>
+
+    <!-- Success message -->
+    <div class="card success" id="success-card">
+        <div class="success-icon">✅</div>
+        <h2>Solicitud recibida</h2>
+        <p>Hemos recibido tu solicitud de eliminacion de cuenta. Te enviaremos un correo de verificacion a <strong id="success-email"></strong> para confirmar tu identidad.</p>
+        <p style="margin-top:1rem">Tu solicitud sera procesada en un plazo maximo de <strong>15 dias habiles</strong> a partir de la verificacion.</p>
+        <p style="margin-top:1rem;font-size:.8rem;color:#999">Numero de solicitud: <strong id="ticket-num"></strong></p>
+    </div>
+
+    <!-- Contact -->
+    <div class="card">
+        <h2>Contacto</h2>
+        <p>Si tienes preguntas sobre el proceso de eliminacion de datos o deseas ejercer otros derechos ARCO, puedes contactarnos:</p>
+        <ul>
+            <li><strong>Email:</strong> privacidad@matchpetz.com</li>
+            <li><strong>Asunto:</strong> Solicitud ARCO - [tu nombre]</li>
+            <li><strong>Plazo de respuesta:</strong> 15 dias habiles</li>
+        </ul>
+        <p style="font-size:.8rem;color:#999;margin-top:.75rem">Conforme a la LFPDPPP y su Reglamento, respondemos solicitudes de derechos ARCO en un plazo maximo de 20 dias habiles contados a partir de la recepcion de la solicitud.</p>
+    </div>
+
+</div>
+
+<div class="footer">
+    <p><a href="/legal.html#terminos">Terminos y Condiciones</a> · <a href="/legal.html#privacidad">Politica de Privacidad</a> · <a href="/">Volver a MatchPetz</a></p>
+    <p style="margin-top:.5rem">&copy; 2026 MatchPetz. Todos los derechos reservados.</p>
+</div>
+
+<script>
+function handleSubmit(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const ticket = 'DEL-' + Date.now().toString(36).toUpperCase();
+
+    document.getElementById('form-card').style.display = 'none';
+    document.getElementById('success-card').style.display = 'block';
+    document.getElementById('success-email').textContent = email;
+    document.getElementById('ticket-num').textContent = ticket;
+
+    window.scrollTo({ top: document.getElementById('success-card').offsetTop - 100, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
