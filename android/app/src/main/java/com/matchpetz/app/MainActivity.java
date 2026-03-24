@@ -1,4 +1,4 @@
-package com.matchpet.app;
+package com.matchpetz.app;
 
 import com.getcapacitor.BridgeActivity;
 
