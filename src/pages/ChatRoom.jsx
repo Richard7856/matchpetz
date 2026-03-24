@@ -348,7 +348,7 @@ const ChatRoom = () => {
 
 const styles = {
     container: {
-        height: '100dvh',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: '#f0f2f5',
@@ -359,9 +359,9 @@ const styles = {
         alignItems: 'center',
         gap: '0.6rem',
         padding: '0.75rem 1rem',
-        background: 'linear-gradient(135deg, var(--color-primary), #d4891f)',
+        background: 'linear-gradient(135deg, #1a1a2e, #2d2d44)',
         flexShrink: 0,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
     },
     backBtn: {
         background: 'none',
@@ -481,10 +481,10 @@ const styles = {
         position: 'relative',
     },
     bubbleOwn: {
-        backgroundColor: 'var(--color-primary)',
+        backgroundColor: '#1a1a2e',
         color: '#fff',
         borderRadius: '18px 18px 4px 18px',
-        boxShadow: '0 1px 3px rgba(238,157,43,0.2)',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
     },
     bubbleOther: {
         backgroundColor: '#fff',
@@ -544,7 +544,7 @@ const styles = {
         width: '42px',
         height: '42px',
         borderRadius: '50%',
-        background: 'linear-gradient(135deg, var(--color-primary), #d4891f)',
+        background: 'linear-gradient(135deg, #1a1a2e, #2d2d44)',
         border: 'none',
         display: 'flex',
         alignItems: 'center',
@@ -553,7 +553,7 @@ const styles = {
         padding: 0,
         flexShrink: 0,
         minHeight: 'auto',
-        boxShadow: '0 2px 8px rgba(238,157,43,0.3)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
         transition: 'opacity 0.2s, transform 0.2s',
     },
 };
