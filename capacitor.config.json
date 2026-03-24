@@ -1,0 +1,20 @@
+{
+  "appId": "com.matchpetz.app",
+  "appName": "MatchPetz",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#fdfdfd",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#ee9d2b"
+    }
+  }
+}

@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatchPetz — La app que conecta a tu mascota con el mundo 🐾</title>
+    <meta name="description" content="Adopta, socializa, encuentra veterinarios, reporta mascotas perdidas y compra todo para tu peludo. Únete a la comunidad pet lover #1 de México.">
+    <meta property="og:title" content="MatchPetz — Tu comunidad pet lover">
+    <meta property="og:description" content="Adopta, socializa, encuentra servicios y conecta con otros amantes de las mascotas.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #ee9d2b;
+            --primary-dark: #d4891f;
+            --secondary: #ffb703;
+            --accent: #f38375;
+            --green: #13ec5b;
+            --bg: #fdfdfd;
+            --text: #2a2a2a;
+            --text-light: #6b7280;
+            --surface: #f5f6f8;
+            --radius: 24px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== NAV ===== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(253,253,253,0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+            transition: box-shadow 0.3s;
+        }
+        nav.scrolled { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .nav-logo img { width: 32px; height: 32px; border-radius: 8px; }
+
+        .nav-links { display: flex; gap: 2rem; align-items: center; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--primary); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.75rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(238,157,43,0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(238,157,43,0.45);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-large { padding: 1rem 2.5rem; font-size: 1.1rem; }
+        .btn-small { padding: 0.5rem 1.25rem; font-size: 0.85rem; }
+
+        /* ===== HERO ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8rem 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(238,157,43,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            left: -15%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(19,236,91,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-content { position: relative; z-index: 1; max-width: 800px; }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(238,157,43,0.1);
+            color: var(--primary-dark);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.6s ease;
+        }
+        .hero-badge .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.6s ease 0.1s both;
+        }
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            justify-content: center;
+            margin-top: 4rem;
+            animation: fadeInUp 0.6s ease 0.4s both;
+        }
+        .hero-stat {
+            text-align: center;
+        }
+        .hero-stat .number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--primary);
+        }
+        .hero-stat .label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* ===== SECTIONS ===== */
+        section { padding: 6rem 2rem; }
+
+        .section-header {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 4rem;
+        }
+        .section-header .tag {
+            display: inline-block;
+            background: rgba(238,157,43,0.1);
+            color: var(--primary-dark);
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section-header h2 {
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+        .section-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        /* ===== FEATURES GRID ===== */
+        .features-section { background: var(--surface); }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* ===== HOW IT WORKS ===== */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .step {
+            text-align: center;
+            position: relative;
+        }
+        .step-number {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+        .step h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .step p { color: var(--text-light); font-size: 0.95rem; }
+
+        /* ===== SOCIAL PROOF ===== */
+        .testimonials-section { background: var(--surface); }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .testimonial {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .testimonial-stars { color: var(--secondary); font-size: 1.1rem; margin-bottom: 0.75rem; }
+        .testimonial p { font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem; color: var(--text); }
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .testimonial-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .testimonial-name { font-weight: 600; font-size: 0.9rem; }
+        .testimonial-role { font-size: 0.8rem; color: var(--text-light); }
+
+        /* ===== WAITLIST / CTA ===== */
+        .cta-section {
+            background: linear-gradient(135deg, var(--text) 0%, #1a1a2e 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(238,157,43,0.15) 0%, transparent 50%);
+        }
+        .cta-content {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .cta-section h2 {
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        .cta-section p {
+            color: rgba(255,255,255,0.7);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .waitlist-form {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 480px;
+            margin: 0 auto 1.5rem;
+        }
+        .waitlist-form input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border-radius: 50px;
+            border: 2px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .waitlist-form input::placeholder { color: rgba(255,255,255,0.4); }
+        .waitlist-form input:focus { border-color: var(--primary); }
+
+        .waitlist-note {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .urgency-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(243,131,117,0.2);
+            color: var(--accent);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        footer a { color: var(--primary); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== MOBILE ===== */
+        @media (max-width: 768px) {
+            nav { padding: 0.75rem 1rem; }
+            .nav-links { display: none; }
+            section { padding: 4rem 1.25rem; }
+            .hero { padding: 6rem 1.25rem 3rem; }
+            .hero-stats { gap: 1.5rem; }
+            .hero-stat .number { font-size: 1.5rem; }
+            .waitlist-form { flex-direction: column; }
+            .waitlist-form .btn { width: 100%; justify-content: center; }
+        }
+
+        /* ===== PHONE MOCKUP ===== */
+        .phone-mockup {
+            max-width: 280px;
+            margin: 3rem auto 0;
+            background: white;
+            border-radius: 36px;
+            padding: 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+            animation: fadeInUp 0.8s ease 0.5s both;
+        }
+        .phone-screen {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 50%, var(--bg) 50%);
+            border-radius: 28px;
+            padding: 2rem 1.5rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .phone-screen .app-icon {
+            width: 72px;
+            height: 72px;
+            background: white;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .phone-screen .app-name {
+            color: white;
+            font-weight: 800;
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+        .phone-screen .app-tagline {
+            color: rgba(255,255,255,0.85);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+        .phone-nav {
+            display: flex;
+            gap: 1.5rem;
+            background: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .phone-nav-item {
+            font-size: 1.2rem;
+            opacity: 0.5;
+        }
+        .phone-nav-item.active { opacity: 1; }
+
+        /* ===== COMPARISON TABLE ===== */
+        .comparison {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .comparison table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .comparison th, .comparison td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .comparison th {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .comparison th:last-child {
+            color: var(--primary);
+        }
+        .comparison td { font-size: 0.9rem; color: var(--text-light); }
+        .comparison .check { color: var(--green); font-weight: bold; font-size: 1.1rem; }
+        .comparison .cross { color: #ccc; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+    <a href="#" class="nav-logo">
+        <img src="/logo.png" alt="MatchPetz" />
+        MatchPetz
+    </a>
+    <div class="nav-links">
+        <a href="#features">Funciones</a>
+        <a href="#como-funciona">Cómo funciona</a>
+        <a href="#testimonios">Comunidad</a>
+        <a href="#unete" class="btn btn-primary btn-small">Acceso anticipado</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span class="pulse"></span>
+            Abierto para early adopters
+        </div>
+        <h1>
+            Todo lo que tu mascota necesita,<br>
+            <span class="highlight">en una sola app</span>
+        </h1>
+        <p>
+            Adopta, socializa, encuentra veterinarios, reporta mascotas perdidas y compra productos — todo conectado con la comunidad pet lover más grande.
+        </p>
+        <div class="hero-actions">
+            <a href="#unete" class="btn btn-primary btn-large">Unirme gratis</a>
+            <a href="#features" class="btn btn-outline btn-large">Ver funciones</a>
+        </div>
+
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="number" id="counter-features">8+</div>
+                <div class="label">Funciones integradas</div>
+            </div>
+            <div class="hero-stat">
+                <div class="number">100%</div>
+                <div class="label">Gratis para usuarios</div>
+            </div>
+            <div class="hero-stat">
+                <div class="number">0</div>
+                <div class="label">Anuncios molestos</div>
+            </div>
+        </div>
+
+        <div class="phone-mockup">
+            <div class="phone-screen">
+                <div class="app-icon">
+                    <img src="/logo.png" alt="MatchPetz" width="48" height="48" style="border-radius: 12px;" />
+                </div>
+                <div class="app-name">MatchPetz</div>
+                <div class="app-tagline">Tu comunidad pet lover</div>
+                <div class="phone-nav">
+                    <span class="phone-nav-item active">🏠</span>
+                    <span class="phone-nav-item">🐾</span>
+                    <span class="phone-nav-item">🗺️</span>
+                    <span class="phone-nav-item">💬</span>
+                    <span class="phone-nav-item">👤</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PROBLEM / AGITATION -->
+<section>
+    <div class="section-header fade-in">
+        <span class="tag">El problema</span>
+        <h2>¿Cuántas apps necesitas para cuidar a tu mascota?</h2>
+        <p>Hoy usas una app para buscar veterinarios, otra para adoptar, otra para comprar comida, un grupo de Facebook para reportar perdidos... MatchPetz lo reúne todo.</p>
+    </div>
+    <div class="comparison fade-in">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Antes</th>
+                    <th>Con MatchPetz ✨</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Adoptar una mascota</td>
+                    <td>Grupos de Facebook</td>
+                    <td><span class="check">✓</span> Integrado</td>
+                </tr>
+                <tr>
+                    <td>Encontrar veterinarios</td>
+                    <td>Google Maps</td>
+                    <td><span class="check">✓</span> Mapa interactivo</td>
+                </tr>
+                <tr>
+                    <td>Reportar mascota perdida</td>
+                    <td>Volantes / redes sociales</td>
+                    <td><span class="check">✓</span> Alertas con GPS</td>
+                </tr>
+                <tr>
+                    <td>Comprar productos</td>
+                    <td>Tiendas online varias</td>
+                    <td><span class="check">✓</span> Marketplace</td>
+                </tr>
+                <tr>
+                    <td>Socializar con otros dueños</td>
+                    <td>🤷 No existe</td>
+                    <td><span class="check">✓</span> Eventos y chat</td>
+                </tr>
+                <tr>
+                    <td>Todo en un lugar</td>
+                    <td><span class="cross">✗</span></td>
+                    <td><span class="check">✓</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+    <div class="section-header fade-in">
+        <span class="tag">Funciones</span>
+        <h2>Una app, infinitas posibilidades para tu peludo</h2>
+        <p>Todo diseñado para hacer tu vida como pet parent más fácil y conectada.</p>
+    </div>
+    <div class="features-grid">
+        <div class="feature-card fade-in">
+            <div class="feature-icon" style="background: rgba(243,131,117,0.12); color: #f38375;">🐾</div>
+            <h3>Adopción</h3>
+            <p>Encuentra a tu compañero ideal. Publica mascotas en adopción o adopta con un proceso simple y seguro.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon" style="background: rgba(238,157,43,0.12); color: var(--primary);">🗺️</div>
+            <h3>Mapa Pet-Friendly</h3>
+            <p>Descubre parques, veterinarios, cafeterías pet-friendly y más en tu zona con nuestro mapa interactivo.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon" style="background: rgba(239,68,68,0.12); color: #ef4444;">🚨</div>
+            <h3>Alertas de Perdidos</h3>
+            <p>Reporta una mascota perdida con geolocalización. La comunidad cercana recibe la alerta al instante.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon" style="background: rgba(19,236,91,0.12); color: #10b981;">🎉</div>
+            <h3>Eventos y Meetups</h3>
+            <p>Crea o únete a caminatas grupales, ferias de adopción, cursos de entrenamiento y más.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon" style="background: rgba(99,102,241,0.12); color: #6366f1;">💬</div>
+            <h3>Chat y Comunidad</h3>
+            <p>Mensajes directos y chats grupales por evento. Conecta con otros pet lovers en tu ciudad.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon" style="background: rgba(255,183,3,0.12); color: var(--secondary);">🛒</div>
+            <h3>Marketplace</h3>
+            <p>Compra y vende productos para mascotas. Desde comida premium hasta accesorios únicos.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon" style="background: rgba(236,72,153,0.12); color: #ec4899;">📋</div>
+            <h3>Servicios Profesionales</h3>
+            <p>Encuentra paseadores, groomers, entrenadores y veterinarios verificados cerca de ti.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon" style="background: rgba(14,165,233,0.12); color: #0ea5e9;">📱</div>
+            <h3>Perfil de Mascota</h3>
+            <p>Crea el perfil digital de tu mascota. Historial médico, fotos y toda su info en un solo lugar.</p>
+        </div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="como-funciona">
+    <div class="section-header fade-in">
+        <span class="tag">Cómo funciona</span>
+        <h2>Empieza en 3 pasos</h2>
+        <p>Sin complicaciones, sin costos. Tu comunidad pet lover te espera.</p>
+    </div>
+    <div class="steps fade-in">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Crea tu cuenta</h3>
+            <p>Regístrate gratis con tu email. Completa tu perfil y el de tu mascota.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Explora tu zona</h3>
+            <p>Descubre lugares, eventos, servicios y mascotas en adopción cerca de ti.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Conecta y disfruta</h3>
+            <p>Únete a eventos, chatea con la comunidad y dale a tu mascota la mejor experiencia.</p>
+        </div>
+    </div>
+</section>
+
+<!-- TESTIMONIALS / SOCIAL PROOF -->
+<section class="testimonials-section" id="testimonios">
+    <div class="section-header fade-in">
+        <span class="tag">Comunidad</span>
+        <h2>Lo que dicen nuestros primeros usuarios</h2>
+    </div>
+    <div class="testimonials-grid fade-in">
+        <div class="testimonial">
+            <div class="testimonial-stars">★★★★★</div>
+            <p>"Encontré a mi perro perdido en menos de 2 horas gracias a las alertas de MatchPetz. La comunidad es increíble."</p>
+            <div class="testimonial-author">
+                <div class="testimonial-avatar">ML</div>
+                <div>
+                    <div class="testimonial-name">María López</div>
+                    <div class="testimonial-role">Mamá de Luna 🐕</div>
+                </div>
+            </div>
+        </div>
+        <div class="testimonial">
+            <div class="testimonial-stars">★★★★★</div>
+            <p>"Por fin una app que tiene todo. Antes usaba 4 apps diferentes para cuidar a mis gatos. Ahora solo necesito MatchPetz."</p>
+            <div class="testimonial-author">
+                <div class="testimonial-avatar">CR</div>
+                <div>
+                    <div class="testimonial-name">Carlos Ramírez</div>
+                    <div class="testimonial-role">Papá de Michi y Pelusa 🐱</div>
+                </div>
+            </div>
+        </div>
+        <div class="testimonial">
+            <div class="testimonial-stars">★★★★★</div>
+            <p>"Adopté a mi gatita por MatchPetz y además encontré un grupo de caminatas para perros. ¡La mejor comunidad!"</p>
+            <div class="testimonial-author">
+                <div class="testimonial-avatar">AG</div>
+                <div>
+                    <div class="testimonial-name">Ana García</div>
+                    <div class="testimonial-role">Mamá de Coco 🐈</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA / WAITLIST -->
+<section class="cta-section" id="unete">
+    <div class="cta-content fade-in">
+        <div class="urgency-counter">
+            🔥 <span id="spots-left">Primeros 500 usuarios obtienen acceso VIP</span>
+        </div>
+        <h2>Únete a la comunidad pet lover más grande</h2>
+        <p>Sé de los primeros en usar MatchPetz. Acceso anticipado gratuito + beneficios exclusivos para early adopters.</p>
+        <form class="waitlist-form" id="waitlist-form">
+            <input type="email" placeholder="tu@email.com" required id="email-input">
+            <button type="submit" class="btn btn-primary">Quiero acceso</button>
+        </form>
+        <p class="waitlist-note">Sin spam. Sin tarjeta de crédito. Solo amor por los peludos.</p>
+        <div id="form-success" style="display:none; margin-top: 1rem;">
+            <p style="color: var(--green); font-weight: 700; font-size: 1.1rem;">🎉 ¡Estás dentro! Te enviaremos tu acceso pronto.</p>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <p>
+        <strong style="color: var(--primary);">MatchPetz</strong> — Hecho con ❤️ para los que aman a sus mascotas
+        <br>
+        <span style="font-size: 0.85rem; margin-top: 0.75rem; display: inline-block;">
+            <a href="/legal.html#terminos">Términos y Condiciones</a> ·
+            <a href="/legal.html#privacidad">Política de Privacidad</a> ·
+            <a href="/legal.html#cookies">Cookies</a>
+        </span>
+        <br>
+        <span style="font-size: 0.8rem; margin-top: 0.5rem; display: inline-block;">© 2026 MatchPetz. Todos los derechos reservados.</span>
+    </p>
+</footer>
+
+<script>
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // Fade-in on scroll (Intersection Observer)
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Waitlist form
+    document.getElementById('waitlist-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = document.getElementById('email-input').value;
+
+        // Save to localStorage as simple waitlist
+        const waitlist = JSON.parse(localStorage.getItem('matchpet_waitlist') || '[]');
+        waitlist.push({ email, date: new Date().toISOString() });
+        localStorage.setItem('matchpet_waitlist', JSON.stringify(waitlist));
+
+        // Show success
+        this.style.display = 'none';
+        document.getElementById('form-success').style.display = 'block';
+
+        // Track conversion (placeholder for analytics)
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'waitlist_signup', { email_domain: email.split('@')[1] });
+        }
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapeo de Procesos — MatchPetz</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',-apple-system,sans-serif;background:#f0f4f8;color:#333}
+.header{background:linear-gradient(135deg,#f5a623,#e8872a);color:#fff;padding:2rem 1.5rem;text-align:center}
+.header h1{font-size:1.8rem;margin-bottom:.3rem}
+.header p{opacity:.85;font-size:.95rem}
+.nav{display:flex;flex-wrap:wrap;gap:.5rem;padding:1rem 1.5rem;background:#fff;border-bottom:1px solid #e0e0e0;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.nav button{padding:.5rem 1rem;border:1.5px solid #d0d5dd;border-radius:20px;background:#fff;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.nav button.active{background:#2b6cb0;color:#fff;border-color:#2b6cb0}
+.nav button:hover{border-color:#2b6cb0;color:#2b6cb0}
+.nav button.active:hover{color:#fff}
+
+.process{display:none;padding:1.5rem;max-width:100%}
+.process.active{display:block}
+.process>h2{text-align:center;font-size:1.5rem;margin-bottom:.3rem;color:#1a365d}
+.process>.subtitle{text-align:center;color:#718096;font-size:.9rem;margin-bottom:1.5rem}
+
+.flowchart-wrap{overflow-x:auto;padding:1rem 0}
+.flowchart{position:relative;margin:0 auto}
+
+/* Shapes */
+.fc-node{position:absolute;text-align:center;font-size:.78rem;line-height:1.3;font-weight:600;display:flex;align-items:center;justify-content:center;padding:.5rem .6rem;z-index:2;cursor:default;transition:box-shadow .2s}
+.fc-node:hover{box-shadow:0 4px 16px rgba(0,0,0,.15)}
+
+/* Start / End */
+.fc-start,.fc-end{
+    background:linear-gradient(135deg,#2b6cb0,#2c5282);color:#fff;
+    border-radius:50px;border:2px solid #1a365d;
+    min-width:120px;height:44px;
+}
+.fc-end{background:linear-gradient(135deg,#38a169,#276749);border-color:#22543d}
+
+/* Process */
+.fc-process{
+    background:#fff;color:#2d3748;
+    border:2px solid #2b6cb0;border-radius:8px;
+    min-width:130px;min-height:48px;
+    box-shadow:0 2px 6px rgba(43,108,176,.1);
+}
+
+/* Decision (diamond via clip-path is hard to read, use rotated square) */
+.fc-decision{
+    background:#ebf4ff;color:#2b6cb0;
+    border:2.5px solid #2b6cb0;
+    width:110px;height:110px;
+    transform:rotate(45deg);
+    border-radius:8px;
+    font-weight:700;
+}
+.fc-decision span{
+    transform:rotate(-45deg);
+    display:block;
+    font-size:.72rem;
+    line-height:1.25;
+    padding:0 .2rem;
+}
+
+/* Data */
+.fc-data{
+    background:#fefcbf;color:#744210;
+    border:2px solid #d69e2e;border-radius:8px;
+    min-width:120px;min-height:44px;
+    box-shadow:0 2px 6px rgba(214,158,46,.1);
+}
+
+/* Sub-process */
+.fc-sub{
+    background:#e9d8fd;color:#553c9a;
+    border:2px solid #805ad5;border-radius:8px;
+    min-width:120px;min-height:44px;
+}
+
+/* Labels on arrows */
+.fc-label{
+    position:absolute;font-size:.7rem;font-weight:700;z-index:3;
+    padding:.1rem .4rem;border-radius:4px;
+}
+.fc-label.yes{color:#276749;background:#c6f6d5}
+.fc-label.no{color:#9b2c2c;background:#fed7d7}
+
+/* SVG arrows */
+.fc-arrows{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.fc-arrows line,.fc-arrows path{stroke:#2b6cb0;stroke-width:2;fill:none}
+.fc-arrows marker path{fill:#2b6cb0}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:1.2rem;padding:.8rem 1.5rem;background:#fff;margin:0 1.5rem 1rem;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.05);justify-content:center}
+.legend-item{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:#4a5568}
+.legend-shape{width:28px;height:18px;border-radius:4px;border:2px solid}
+.legend-diamond{width:16px;height:16px;transform:rotate(45deg);border-radius:3px;border:2px solid #2b6cb0;background:#ebf4ff}
+
+/* Sub section titles */
+.sub-title{text-align:center;font-size:1.1rem;font-weight:700;color:#2d3748;margin:2rem 0 .5rem;padding-top:1rem;border-top:2px dashed #e2e8f0}
+.sub-title:first-of-type{border-top:none;margin-top:.5rem}
+
+@media(max-width:700px){
+    .flowchart-wrap{padding:.5rem 0}
+    .fc-node{font-size:.7rem}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Mapeo de Procesos — MatchPetz</h1>
+    <p>Diagramas de flujo estilo flowchart de cada modulo</p>
+</div>
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-shape" style="background:linear-gradient(135deg,#2b6cb0,#2c5282);border-color:#1a365d"></div> Inicio/Fin</div>
+    <div class="legend-item"><div class="legend-shape" style="background:#fff;border-color:#2b6cb0"></div> Proceso</div>
+    <div class="legend-item"><div class="legend-diamond"></div> Decision</div>
+    <div class="legend-item"><div class="legend-shape" style="background:#fefcbf;border-color:#d69e2e"></div> Base de datos</div>
+    <div class="legend-item"><div class="legend-shape" style="background:#e9d8fd;border-color:#805ad5"></div> Subproceso</div>
+</div>
+
+<nav class="nav" id="nav"></nav>
+
+<!-- All process containers will be generated by JS -->
+<div id="content"></div>
+
+<script>
+// =========================================================
+// FLOWCHART DATA — each process defined declaratively
+// =========================================================
+const processes = [
+// -------- 1. AUTH --------
+{
+    id:'auth', label:'🔐 Autenticacion', title:'1. Autenticacion y Registro',
+    subtitle:'Flujo completo desde la entrada hasta el Home',
+    charts:[
+    {
+        title:'1.1 Verificacion de Sesion',
+        width:700, height:480,
+        nodes:[
+            {id:'s',x:300,y:30,w:140,h:44,type:'start',text:'Usuario abre la app'},
+            {id:'p1',x:300,y:110,w:180,h:48,type:'process',text:'AuthRedirect verifica sesion con getSession()'},
+            {id:'d1',x:335,y:210,w:100,h:100,type:'decision',text:'Tiene sesion?'},
+            {id:'login',x:80,y:235,w:130,h:44,type:'end',text:'Redirige a /login'},
+            {id:'d2',x:335,y:350,w:100,h:100,type:'decision',text:'Tiene perfil?'},
+            {id:'complete',x:80,y:375,w:150,h:44,type:'end',text:'Redirige a /complete-profile'},
+            {id:'home',x:335,y:460,w:130,h:44,type:'end',text:'Redirige a /home'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},
+            {from:'p1',to:'d1'},
+            {from:'d1',to:'login',label:'No',side:'left'},
+            {from:'d1',to:'d2',label:'Si'},
+            {from:'d2',to:'complete',label:'No',side:'left'},
+            {from:'d2',to:'home',label:'Si'},
+        ]
+    },
+    {
+        title:'1.2 Login con Email',
+        width:700, height:520,
+        nodes:[
+            {id:'s',x:280,y:30,w:180,h:44,type:'start',text:'Ingresa email y contrasena'},
+            {id:'p1',x:280,y:110,w:180,h:48,type:'process',text:'Llama signInWithPassword()'},
+            {id:'d1',x:315,y:200,w:100,h:100,type:'decision',text:'Credenciales validas?'},
+            {id:'err',x:80,y:225,w:140,h:44,type:'end',text:'Muestra error'},
+            {id:'p2',x:280,y:340,w:180,h:48,type:'process',text:'Consulta perfil del usuario'},
+            {id:'d2',x:315,y:420,w:100,h:100,type:'decision',text:'Tiene perfil?'},
+            {id:'cp',x:530,y:445,w:140,h:44,type:'end',text:'/complete-profile'},
+            {id:'hm',x:315,y:530,w:120,h:44,type:'end',text:'/home'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},
+            {from:'p1',to:'d1'},
+            {from:'d1',to:'err',label:'No',side:'left'},
+            {from:'d1',to:'p2',label:'Si'},
+            {from:'p2',to:'d2'},
+            {from:'d2',to:'cp',label:'No',side:'right'},
+            {from:'d2',to:'hm',label:'Si'},
+        ]
+    },
+    {
+        title:'1.3 Registro y Google OAuth',
+        width:750, height:340,
+        nodes:[
+            {id:'s',x:30,y:30,w:140,h:44,type:'start',text:'Pantalla de Login'},
+            {id:'d1',x:80,y:120,w:100,h:100,type:'decision',text:'Metodo?'},
+            {id:'reg',x:300,y:30,w:160,h:48,type:'process',text:'signUp(email, password)'},
+            {id:'mail',x:300,y:110,w:160,h:48,type:'data',text:'Envia email de verificacion'},
+            {id:'wait',x:300,y:190,w:160,h:44,type:'end',text:'Espera clic en enlace'},
+            {id:'goo',x:300,y:270,w:160,h:48,type:'process',text:'signInWithOAuth(google)'},
+            {id:'gred',x:520,y:270,w:160,h:48,type:'process',text:'Google redirige a /'},
+            {id:'auth',x:520,y:150,w:180,h:48,type:'sub',text:'AuthRedirect procesa hash y redirige'},
+        ],
+        arrows:[
+            {from:'s',to:'d1'},
+            {from:'d1',to:'reg',label:'Email',side:'right',fromSide:'top'},
+            {from:'reg',to:'mail'},
+            {from:'mail',to:'wait'},
+            {from:'d1',to:'goo',label:'Google',side:'right',fromSide:'bottom'},
+            {from:'goo',to:'gred'},
+            {from:'gred',to:'auth'},
+        ]
+    },
+    ]
+},
+// -------- 2. ADOPCION --------
+{
+    id:'adoption', label:'🐾 Adopcion', title:'2. Adopcion',
+    subtitle:'Busqueda tipo Tinder, contacto con dueno, publicar mascota',
+    charts:[
+    {
+        title:'2.1 Busqueda por Swipe',
+        width:750, height:500,
+        nodes:[
+            {id:'s',x:300,y:20,w:160,h:44,type:'start',text:'Entra a Adopcion'},
+            {id:'p1',x:300,y:90,w:180,h:48,type:'data',text:'Carga mascotas (status: disponible, limit 50)'},
+            {id:'p2',x:300,y:168,w:160,h:48,type:'process',text:'Aplica filtros tipo + genero'},
+            {id:'p3',x:300,y:245,w:160,h:48,type:'process',text:'Muestra carta actual'},
+            {id:'d1',x:335,y:340,w:100,h:100,type:'decision',text:'Accion del usuario?'},
+            {id:'dis',x:100,y:365,w:120,h:44,type:'process',text:'Siguiente mascota'},
+            {id:'like',x:560,y:325,w:140,h:48,type:'sub',text:'Inicia contacto con dueno (ver 2.2)'},
+            {id:'chat',x:560,y:405,w:130,h:44,type:'end',text:'Abre chat'},
+            {id:'back',x:100,y:440,w:100,h:30,type:'process',text:'Vuelve a carta'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},
+            {from:'p1',to:'p2'},
+            {from:'p2',to:'p3'},
+            {from:'p3',to:'d1'},
+            {from:'d1',to:'dis',label:'❌',side:'left'},
+            {from:'d1',to:'like',label:'❤️',side:'right'},
+            {from:'like',to:'chat'},
+            {from:'dis',to:'back'},
+        ]
+    },
+    {
+        title:'2.2 Contacto al dar Like',
+        width:700, height:520,
+        nodes:[
+            {id:'s',x:270,y:20,w:160,h:44,type:'start',text:'Usuario da Like ❤️'},
+            {id:'d0',x:295,y:100,w:100,h:100,type:'decision',text:'Es su mascota?'},
+            {id:'skip',x:80,y:125,w:120,h:44,type:'end',text:'Solo avanza'},
+            {id:'p1',x:270,y:240,w:180,h:48,type:'data',text:'Busca conversacion existente entre ambos'},
+            {id:'d1',x:305,y:325,w:100,h:100,type:'decision',text:'Existe conv?'},
+            {id:'go',x:530,y:350,w:130,h:44,type:'end',text:'Navega al chat'},
+            {id:'p2',x:240,y:430,w:200,h:48,type:'data',text:'Crea conversacion + mensaje "Me interesa adoptar a..."'},
+            {id:'chat',x:285,y:510,w:130,h:44,type:'end',text:'Abre el chat'},
+        ],
+        arrows:[
+            {from:'s',to:'d0'},
+            {from:'d0',to:'skip',label:'Si',side:'left'},
+            {from:'d0',to:'p1',label:'No'},
+            {from:'p1',to:'d1'},
+            {from:'d1',to:'go',label:'Si',side:'right'},
+            {from:'d1',to:'p2',label:'No'},
+            {from:'p2',to:'chat'},
+        ]
+    },
+    {
+        title:'2.3 Publicar mascota',
+        width:600, height:340,
+        nodes:[
+            {id:'s',x:220,y:20,w:160,h:44,type:'start',text:'Formulario adopcion'},
+            {id:'p1',x:200,y:90,w:200,h:48,type:'process',text:'Llena: nombre, tipo, genero, raza, edad, descripcion'},
+            {id:'p2',x:220,y:165,w:170,h:48,type:'process',text:'Sube fotos (max 5) a Storage'},
+            {id:'p3',x:220,y:240,w:170,h:48,type:'data',text:'INSERT adoption_pets status: disponible'},
+            {id:'e',x:250,y:315,w:120,h:44,type:'end',text:'Navega a /adoption'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},{from:'p1',to:'p2'},{from:'p2',to:'p3'},{from:'p3',to:'e'},
+        ]
+    },
+    ]
+},
+// -------- 3. ALERTAS --------
+{
+    id:'alerts', label:'🚨 Alertas', title:'3. Alertas de Mascotas Perdidas',
+    subtitle:'Reporte, busqueda y contacto — funciona sin autenticacion',
+    charts:[
+    {
+        title:'3.1 Crear alerta',
+        width:750, height:480,
+        nodes:[
+            {id:'s',x:280,y:20,w:180,h:44,type:'start',text:'Formulario de alerta'},
+            {id:'p1',x:260,y:90,w:220,h:48,type:'process',text:'Nombre*, tipo (10+otro), descripcion*, recompensa, imagen'},
+            {id:'p2',x:280,y:168,w:180,h:48,type:'process',text:'Captura ubicacion en mapa (opcional)'},
+            {id:'d1',x:315,y:262,w:100,h:100,type:'decision',text:'Autenticado?'},
+            {id:'sv',x:520,y:287,w:160,h:48,type:'data',text:'INSERT en alerts (visible para todos)'},
+            {id:'lo',x:80,y:287,w:150,h:48,type:'data',text:'Guarda en localStorage (solo local)'},
+            {id:'e1',x:520,y:370,w:140,h:44,type:'end',text:'Navega a /alerts'},
+            {id:'e2',x:80,y:370,w:160,h:44,type:'end',text:'Muestra aviso local'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},{from:'p1',to:'p2'},{from:'p2',to:'d1'},
+            {from:'d1',to:'sv',label:'Si',side:'right'},
+            {from:'d1',to:'lo',label:'No',side:'left'},
+            {from:'sv',to:'e1'},{from:'lo',to:'e2'},
+        ]
+    },
+    {
+        title:'3.2 Ver alerta y contactar',
+        width:700, height:460,
+        nodes:[
+            {id:'s',x:270,y:20,w:160,h:44,type:'start',text:'Lista de alertas'},
+            {id:'p1',x:250,y:90,w:200,h:48,type:'process',text:'Mezcla alertas servidor + locales'},
+            {id:'p2',x:270,y:168,w:170,h:48,type:'process',text:'Click → Detalle con mapa'},
+            {id:'d1',x:300,y:262,w:100,h:100,type:'decision',text:'Quien ve?'},
+            {id:'anon',x:80,y:240,w:130,h:44,type:'end',text:'"Inicia sesion"'},
+            {id:'own',x:80,y:320,w:130,h:44,type:'end',text:'"Es tu alerta"'},
+            {id:'contact',x:520,y:287,w:140,h:48,type:'sub',text:'Crea/busca conversacion'},
+            {id:'chat',x:520,y:370,w:120,h:44,type:'end',text:'Abre chat'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},{from:'p1',to:'p2'},{from:'p2',to:'d1'},
+            {from:'d1',to:'anon',label:'Anonimo',side:'left'},
+            {from:'d1',to:'own',label:'Dueno',side:'left'},
+            {from:'d1',to:'contact',label:'Otro user',side:'right'},
+            {from:'contact',to:'chat'},
+        ]
+    },
+    ]
+},
+// -------- 4. EVENTOS --------
+{
+    id:'events', label:'📅 Eventos', title:'4. Eventos',
+    subtitle:'Crear evento, RSVP, chat grupal, resenas',
+    charts:[
+    {
+        title:'4.1 Crear evento',
+        width:600, height:370,
+        nodes:[
+            {id:'s',x:220,y:20,w:160,h:44,type:'start',text:'Formulario de evento'},
+            {id:'p1',x:180,y:90,w:240,h:48,type:'process',text:'Tipo, nombre*, fecha*, hora*, lugar*, imagenes (max 3)'},
+            {id:'p2',x:210,y:168,w:180,h:48,type:'process',text:'Geolocalizacion (opcional)'},
+            {id:'p3',x:210,y:245,w:180,h:48,type:'data',text:'INSERT events con creator_id, name, avatar'},
+            {id:'e',x:250,y:325,w:120,h:44,type:'end',text:'Navega a /home'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},{from:'p1',to:'p2'},{from:'p2',to:'p3'},{from:'p3',to:'e'},
+        ]
+    },
+    {
+        title:'4.2 RSVP y Chat Grupal',
+        width:750, height:560,
+        nodes:[
+            {id:'s',x:300,y:20,w:160,h:44,type:'start',text:'Detalle del evento'},
+            {id:'p0',x:280,y:90,w:200,h:48,type:'process',text:'Muestra badge: Proximo / Hoy / Pasado'},
+            {id:'d1',x:325,y:185,w:100,h:100,type:'decision',text:'Evento pasado?'},
+            {id:'rev',x:560,y:170,w:140,h:48,type:'sub',text:'Muestra resenas (solo post-evento)'},
+            {id:'d2',x:325,y:320,w:100,h:100,type:'decision',text:'Evento lleno?'},
+            {id:'full',x:100,y:345,w:130,h:44,type:'end',text:'RSVP deshabilitado'},
+            {id:'p1',x:300,y:430,w:170,h:48,type:'process',text:'Click "Inscribirme"'},
+            {id:'p2',x:300,y:500,w:180,h:48,type:'data',text:'INSERT event_attendees'},
+            {id:'p3',x:540,y:430,w:170,h:48,type:'sub',text:'Crea/une chat grupal (lazy)'},
+            {id:'e',x:540,y:510,w:130,h:44,type:'end',text:'Chat disponible'},
+        ],
+        arrows:[
+            {from:'s',to:'p0'},{from:'p0',to:'d1'},
+            {from:'d1',to:'rev',label:'Si',side:'right'},
+            {from:'d1',to:'d2',label:'No'},
+            {from:'d2',to:'full',label:'Si',side:'left'},
+            {from:'d2',to:'p1',label:'No'},
+            {from:'p1',to:'p2'},
+            {from:'p1',to:'p3',side:'right'},
+            {from:'p3',to:'e'},
+        ]
+    },
+    ]
+},
+// -------- 5. MARKETPLACE --------
+{
+    id:'marketplace', label:'🛒 Marketplace', title:'5. Marketplace',
+    subtitle:'Publicar productos, carrito de compras, checkout',
+    charts:[
+    {
+        title:'5.1 Explorar y Comprar',
+        width:750, height:480,
+        nodes:[
+            {id:'s',x:280,y:20,w:160,h:44,type:'start',text:'Entra a Marketplace'},
+            {id:'p1',x:260,y:90,w:200,h:48,type:'data',text:'Carga productos (limit 40)'},
+            {id:'p2',x:280,y:165,w:170,h:48,type:'process',text:'Filtros: busqueda + categoria'},
+            {id:'p3',x:280,y:240,w:170,h:48,type:'process',text:'Click "Agregar al carrito"'},
+            {id:'p4',x:280,y:315,w:170,h:48,type:'data',text:'Guarda en localStorage'},
+            {id:'p5',x:280,y:390,w:170,h:48,type:'process',text:'Pantalla carrito: ajustar cantidades'},
+            {id:'p6',x:280,y:460,w:170,h:48,type:'data',text:'INSERT orders (status: pending)'},
+            {id:'e',x:520,y:460,w:130,h:44,type:'end',text:'Pedido exitoso'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},{from:'p1',to:'p2'},{from:'p2',to:'p3'},{from:'p3',to:'p4'},
+            {from:'p4',to:'p5'},{from:'p5',to:'p6'},{from:'p6',to:'e'},
+        ]
+    },
+    ]
+},
+// -------- 6. CHAT --------
+{
+    id:'chat', label:'💬 Chat', title:'6. Chat y Mensajeria',
+    subtitle:'Conversaciones directas, grupales, tiempo real',
+    charts:[
+    {
+        title:'6.1 Flujo de Mensajeria',
+        width:750, height:500,
+        nodes:[
+            {id:'s',x:280,y:20,w:180,h:44,type:'start',text:'Trigger: Like / Contacto / RSVP'},
+            {id:'p1',x:280,y:90,w:180,h:48,type:'data',text:'Busca conversacion existente'},
+            {id:'d1',x:315,y:180,w:100,h:100,type:'decision',text:'Existe?'},
+            {id:'cr',x:100,y:200,w:160,h:48,type:'data',text:'Crea conversacion + mensaje auto'},
+            {id:'op',x:280,y:310,w:170,h:48,type:'process',text:'Abre pantalla de chat'},
+            {id:'p2',x:280,y:385,w:170,h:48,type:'process',text:'Usuario escribe mensaje'},
+            {id:'p3',x:100,y:385,w:150,h:48,type:'process',text:'UI optimista (temp msg)'},
+            {id:'p4',x:460,y:385,w:170,h:48,type:'data',text:'INSERT messages'},
+            {id:'p5',x:460,y:460,w:180,h:48,type:'sub',text:'Realtime actualiza en ambos'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},{from:'p1',to:'d1'},
+            {from:'d1',to:'cr',label:'No',side:'left'},
+            {from:'d1',to:'op',label:'Si'},
+            {from:'cr',to:'op'},
+            {from:'op',to:'p2'},
+            {from:'p2',to:'p3',side:'left'},
+            {from:'p2',to:'p4',side:'right'},
+            {from:'p4',to:'p5'},
+        ]
+    },
+    ]
+},
+// -------- 7. SERVICIOS --------
+{
+    id:'services', label:'🏥 Servicios', title:'7. Servicios y Citas',
+    subtitle:'Publicar servicios, agendar citas, directorio',
+    charts:[
+    {
+        title:'7.1 Publicar servicio y agendar cita',
+        width:750, height:420,
+        nodes:[
+            {id:'s',x:50,y:20,w:140,h:44,type:'start',text:'Publicar servicio'},
+            {id:'p1',x:30,y:90,w:180,h:48,type:'process',text:'Tipo, nombre, fotos, descripcion, contacto'},
+            {id:'d1',x:75,y:180,w:100,h:100,type:'decision',text:'Es veterinario?'},
+            {id:'sp',x:30,y:310,w:150,h:48,type:'process',text:'Agrega especialidad'},
+            {id:'db',x:250,y:240,w:140,h:48,type:'data',text:'INSERT services'},
+            {id:'s2',x:450,y:20,w:140,h:44,type:'start',text:'Agendar cita'},
+            {id:'p3',x:430,y:90,w:180,h:48,type:'process',text:'Selecciona mascota, fecha, horario'},
+            {id:'p4',x:440,y:168,w:170,h:48,type:'data',text:'INSERT appointments'},
+            {id:'e2',x:460,y:250,w:130,h:44,type:'end',text:'Navega a /appointments'},
+            {id:'e1',x:260,y:330,w:120,h:44,type:'end',text:'Servicio creado'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},{from:'p1',to:'d1'},
+            {from:'d1',to:'sp',label:'Si'},
+            {from:'d1',to:'db',label:'No',side:'right'},
+            {from:'sp',to:'db'},
+            {from:'db',to:'e1'},
+            {from:'s2',to:'p3'},{from:'p3',to:'p4'},{from:'p4',to:'e2'},
+        ]
+    },
+    ]
+},
+// -------- 8. MAPA --------
+{
+    id:'map', label:'🗺️ Mapa', title:'8. Mapa y Lugares',
+    subtitle:'Descubrir negocios, parques y servicios pet-friendly',
+    charts:[
+    {
+        title:'8.1 Exploracion del mapa',
+        width:650, height:370,
+        nodes:[
+            {id:'s',x:240,y:20,w:160,h:44,type:'start',text:'Abre MapScreen'},
+            {id:'p1',x:220,y:90,w:200,h:48,type:'data',text:'Carga places + services con marcadores'},
+            {id:'p2',x:240,y:168,w:170,h:48,type:'process',text:'Filtros: tipo, radio, categoria'},
+            {id:'p3',x:60,y:250,w:160,h:48,type:'process',text:'"Mi ubicacion" (geoloc)'},
+            {id:'p4',x:280,y:250,w:160,h:48,type:'process',text:'Click marcador → popup'},
+            {id:'p5',x:500,y:250,w:140,h:48,type:'sub',text:'Detalle del servicio'},
+            {id:'e',x:500,y:330,w:140,h:44,type:'end',text:'Agendar / Contactar'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},{from:'p1',to:'p2'},
+            {from:'p2',to:'p3',side:'left'},
+            {from:'p2',to:'p4'},
+            {from:'p4',to:'p5'},
+            {from:'p5',to:'e'},
+        ]
+    },
+    ]
+},
+// -------- 9. PERFIL --------
+{
+    id:'profile', label:'👤 Perfil', title:'9. Perfil y Roles de Negocio',
+    subtitle:'Gestionar perfil, mascotas, activar rol de negocio',
+    charts:[
+    {
+        title:'9.1 Activar rol de negocio',
+        width:650, height:420,
+        nodes:[
+            {id:'s',x:230,y:20,w:180,h:44,type:'start',text:'Click "Activar Rol"'},
+            {id:'p1',x:220,y:90,w:200,h:48,type:'process',text:'Selecciona tipo de rol (9 opciones)'},
+            {id:'p2',x:220,y:168,w:200,h:48,type:'process',text:'Nombre negocio, descripcion'},
+            {id:'p3',x:220,y:245,w:200,h:48,type:'process',text:'Sube documento verificacion'},
+            {id:'p4',x:230,y:325,w:180,h:48,type:'data',text:'INSERT business_roles (status: approved)'},
+            {id:'e',x:260,y:405,w:130,h:44,type:'end',text:'Navega a /dashboard'},
+        ],
+        arrows:[
+            {from:'s',to:'p1'},{from:'p1',to:'p2'},{from:'p2',to:'p3'},{from:'p3',to:'p4'},{from:'p4',to:'e'},
+        ]
+    },
+    ]
+},
+// -------- 10. DISCOVER --------
+{
+    id:'discover', label:'🔍 Descubrir', title:'10. Descubrir',
+    subtitle:'Feed social (Personas) y directorio de negocios (Negocios)',
+    charts:[
+    {
+        title:'10.1 Tabs de Descubrir',
+        width:700, height:380,
+        nodes:[
+            {id:'s',x:270,y:20,w:160,h:44,type:'start',text:'Pantalla Descubrir'},
+            {id:'d1',x:295,y:110,w:100,h:100,type:'decision',text:'Tab activo?'},
+            {id:'p1',x:60,y:100,w:150,h:48,type:'process',text:'Tab Personas: Feed Instagram'},
+            {id:'p2',x:500,y:100,w:160,h:48,type:'process',text:'Tab Negocios: Mapa servicios'},
+            {id:'a1',x:60,y:185,w:150,h:48,type:'process',text:'Crear post / Ver perfiles'},
+            {id:'a2',x:500,y:185,w:160,h:48,type:'process',text:'Filtrar por tipo y radio'},
+            {id:'e1',x:70,y:270,w:130,h:44,type:'end',text:'/users/{id}'},
+            {id:'e2',x:510,y:270,w:130,h:44,type:'end',text:'/services/{id}'},
+        ],
+        arrows:[
+            {from:'s',to:'d1'},
+            {from:'d1',to:'p1',label:'Personas',side:'left'},
+            {from:'d1',to:'p2',label:'Negocios',side:'right'},
+            {from:'p1',to:'a1'},{from:'p2',to:'a2'},
+            {from:'a1',to:'e1'},{from:'a2',to:'e2'},
+        ]
+    },
+    ]
+},
+];
+
+// =========================================================
+// RENDER ENGINE
+// =========================================================
+const content = document.getElementById('content');
+const nav = document.getElementById('nav');
+
+function getCenter(n){
+    if(n.type==='decision') return {x:n.x+n.w/2, y:n.y+n.h/2};
+    return {x:n.x+n.w/2, y:n.y+n.h/2};
+}
+function getBottom(n){const c=getCenter(n); return {x:c.x, y:n.type==='decision'?n.y+n.h:n.y+n.h};}
+function getTop(n){const c=getCenter(n); return {x:c.x, y:n.y};}
+function getLeft(n){const c=getCenter(n); return {x:n.x, y:c.y};}
+function getRight(n){const c=getCenter(n); return {x:n.x+n.w, y:c.y};}
+
+function renderChart(chart){
+    const wrap = document.createElement('div');
+    wrap.className='flowchart-wrap';
+    const fc = document.createElement('div');
+    fc.className='flowchart';
+    fc.style.width=chart.width+'px';
+    fc.style.height=chart.height+'px';
+    fc.style.position='relative';
+
+    // SVG for arrows
+    const svgNS='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(svgNS,'svg');
+    svg.setAttribute('class','fc-arrows');
+    svg.setAttribute('width',chart.width);
+    svg.setAttribute('height',chart.height);
+    // Arrow marker
+    const defs=document.createElementNS(svgNS,'defs');
+    const marker=document.createElementNS(svgNS,'marker');
+    marker.setAttribute('id','arrow-'+chart.title.replace(/\s/g,''));
+    marker.setAttribute('viewBox','0 0 10 10');
+    marker.setAttribute('refX','10');marker.setAttribute('refY','5');
+    marker.setAttribute('markerWidth','8');marker.setAttribute('markerHeight','8');
+    marker.setAttribute('orient','auto-start-reverse');
+    const mp=document.createElementNS(svgNS,'path');
+    mp.setAttribute('d','M 0 0 L 10 5 L 0 10 z');
+    mp.setAttribute('fill','#2b6cb0');
+    marker.appendChild(mp);defs.appendChild(marker);svg.appendChild(defs);
+
+    const markerUrl='url(#arrow-'+chart.title.replace(/\s/g,'')+')';
+
+    // Render nodes
+    const nodeMap={};
+    chart.nodes.forEach(n=>{
+        nodeMap[n.id]=n;
+        const el=document.createElement('div');
+        el.className='fc-node fc-'+n.type;
+        el.style.left=n.x+'px';
+        el.style.top=n.y+'px';
+        if(n.type!=='decision'){
+            el.style.width=n.w+'px';
+            el.style.minHeight=n.h+'px';
+            el.textContent=n.text;
+        } else {
+            el.style.width=n.w+'px';
+            el.style.height=n.h+'px';
+            const sp=document.createElement('span');
+            sp.textContent=n.text;
+            el.appendChild(sp);
+        }
+        fc.appendChild(el);
+    });
+
+    // Render arrows
+    chart.arrows.forEach(a=>{
+        const fromN=nodeMap[a.from], toN=nodeMap[a.to];
+        if(!fromN||!toN)return;
+        let p1,p2;
+
+        if(a.side==='left'){
+            p1=fromN.type==='decision'?getLeft(fromN):getBottom(fromN);
+            p2=toN.y<fromN.y?getBottom(toN):
+               toN.x+toN.w<fromN.x?getRight(toN):
+               getTop(toN).y>p1.y?getTop(toN):getRight(toN);
+            if(toN.x+toN.w/2<fromN.x) p2=getRight(toN);
+            else p2=getTop(toN);
+        } else if(a.side==='right'){
+            p1=fromN.type==='decision'?getRight(fromN):getBottom(fromN);
+            p2=toN.x>fromN.x+fromN.w?getLeft(toN):getTop(toN);
+            if(toN.x>fromN.x+fromN.w) p2=getLeft(toN);
+            else p2=getTop(toN);
+        } else {
+            p1=getBottom(fromN);
+            p2=getTop(toN);
+            if(Math.abs(p1.x-p2.x)>150 && Math.abs(p1.y-p2.y)<30){
+                p1=getRight(fromN);p2=getLeft(toN);
+            }
+        }
+
+        const path=document.createElementNS(svgNS,'path');
+        // Simple elbow connector
+        if(Math.abs(p1.x-p2.x)<3){
+            path.setAttribute('d',`M${p1.x},${p1.y} L${p2.x},${p2.y}`);
+        } else {
+            const midY=p1.y+(p2.y-p1.y)/2;
+            if(Math.abs(p1.y-p2.y)<10){
+                path.setAttribute('d',`M${p1.x},${p1.y} L${p2.x},${p2.y}`);
+            } else {
+                path.setAttribute('d',`M${p1.x},${p1.y} L${p1.x},${midY} L${p2.x},${midY} L${p2.x},${p2.y}`);
+            }
+        }
+        path.setAttribute('marker-end',markerUrl);
+        svg.appendChild(path);
+
+        // Label
+        if(a.label){
+            const lbl=document.createElement('div');
+            lbl.className='fc-label '+(a.label==='Si'||a.label==='❤️'?'yes':'no');
+            lbl.textContent=a.label;
+            const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+            lbl.style.left=(mx-12)+'px';
+            lbl.style.top=(my-10)+'px';
+            fc.appendChild(lbl);
+        }
+    });
+
+    fc.appendChild(svg);
+    wrap.appendChild(fc);
+    return wrap;
+}
+
+processes.forEach((proc,idx)=>{
+    // Nav button
+    const btn=document.createElement('button');
+    btn.textContent=proc.label;
+    btn.onclick=()=>{
+        document.querySelectorAll('.process').forEach(p=>p.classList.remove('active'));
+        document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+        document.getElementById('proc-'+proc.id).classList.add('active');
+        btn.classList.add('active');
+    };
+    nav.appendChild(btn);
+
+    // Process container
+    const div=document.createElement('div');
+    div.className='process';
+    div.id='proc-'+proc.id;
+
+    const h2=document.createElement('h2');h2.textContent=proc.title;div.appendChild(h2);
+    const sub=document.createElement('p');sub.className='subtitle';sub.textContent=proc.subtitle;div.appendChild(sub);
+
+    proc.charts.forEach(chart=>{
+        const st=document.createElement('div');st.className='sub-title';st.textContent=chart.title;
+        div.appendChild(st);
+        div.appendChild(renderChart(chart));
+    });
+
+    content.appendChild(div);
+    if(idx===0) btn.click();
+});
+</script>
+</body>
+</html>

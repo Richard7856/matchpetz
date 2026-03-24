@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="110" fill="#ee9d2b"/>
+  <!-- Paw print -->
+  <circle cx="200" cy="155" r="38" fill="#fff"/>
+  <circle cx="312" cy="155" r="38" fill="#fff"/>
+  <circle cx="138" cy="224" r="30" fill="#fff"/>
+  <circle cx="374" cy="224" r="30" fill="#fff"/>
+  <ellipse cx="256" cy="326" rx="102" ry="86" fill="#fff"/>
+</svg>
