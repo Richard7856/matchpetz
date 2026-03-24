@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ReviewSection from '../components/ReviewSection';
 import AttendeePreview from '../components/AttendeePreview';
 import AppBar from '../components/AppBar';
+import { sendPush } from '../utils/pushNotify';
 import LoadingState from '../components/LoadingState';
 import ErrorBox from '../components/ErrorBox';
 import { formatEventDate, formatTimeSlot } from '../utils/formatters';
@@ -122,16 +123,18 @@ const EventDetail = () => {
                 setAttending(true);
                 setAttendeeCount(c => c + 1);
 
-                // Notify event creator (fire-and-forget)
+                // Notify event creator — in-app + push (fire-and-forget)
                 if (event.creator_id && event.creator_id !== user.id) {
                     const displayName = authProfile?.display_name || 'Alguien';
+                    const notifTitle = `${displayName} se inscribio a tu evento`;
                     supabase.from('notifications').insert({
                         user_id: event.creator_id,
                         type: 'event',
-                        title: `${displayName} se inscribio a tu evento`,
+                        title: notifTitle,
                         body: event.title,
                         entity_id: event.id,
                     });
+                    sendPush(event.creator_id, notifTitle, event.title, { type: 'event', entity_id: event.id });
                 }
 
                 // Find or create group conversation

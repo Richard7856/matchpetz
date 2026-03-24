@@ -6,6 +6,7 @@ import { supabase } from '../supabase';
 import { getAvatarUrl } from '../utils/avatar';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingState from '../components/LoadingState';
+import { sendPush } from '../utils/pushNotify';
 import ErrorBox from '../components/ErrorBox';
 import NotificationBell from '../components/NotificationBell';
 import { formatEventDate, formatTimeSlot } from '../utils/formatters';
@@ -60,16 +61,18 @@ const Home = () => {
             const { error } = await supabase.from('event_attendees').insert({ event_id: eventId, user_id: user.id });
             if (!error) {
                 setEvents(events.map((x) => (x.id === eventId ? { ...x, attending: true } : x)));
-                // Notify event creator (fire-and-forget)
+                // Notify event creator — in-app + push (fire-and-forget)
                 if (ev.creator_id && ev.creator_id !== user.id) {
                     const { data: myProfile } = await supabase.from('profiles').select('display_name').eq('id', user.id).maybeSingle();
+                    const notifTitle = `${myProfile?.display_name || 'Alguien'} se inscribio a tu evento`;
                     supabase.from('notifications').insert({
                         user_id: ev.creator_id,
                         type: 'event',
-                        title: `${myProfile?.display_name || 'Alguien'} se inscribio a tu evento`,
+                        title: notifTitle,
                         body: ev.title,
                         entity_id: ev.id,
                     });
+                    sendPush(ev.creator_id, notifTitle, ev.title, { type: 'event', entity_id: ev.id });
                 }
             }
         }

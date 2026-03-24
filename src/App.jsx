@@ -7,6 +7,8 @@ import BottomNav from './components/BottomNav';
 import LoadingState from './components/LoadingState';
 import { AuthProvider } from './contexts/AuthContext';
 import useIsMobile from './hooks/useIsMobile';
+import usePushNotifications from './hooks/usePushNotifications';
+import { useAuth } from './contexts/AuthContext';
 import './index.css';
 
 // Lazy-loaded pages
@@ -103,6 +105,8 @@ function AppShell() {
     const [loading, setLoading] = useState(true);
     const isMobile = useIsMobile();
     const location = useLocation();
+    const { user } = useAuth();
+    usePushNotifications(user);
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 2500);

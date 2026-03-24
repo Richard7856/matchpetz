@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Send, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { sendPush } from '../utils/pushNotify';
 
 const AdoptionDetail = () => {
     const { id } = useParams();
@@ -86,14 +87,17 @@ const AdoptionDetail = () => {
                     sender_id: user.id,
                     content: `Hola! Me interesa adoptar a ${pet.name} 🐾`,
                 });
-                // Notify pet owner (fire-and-forget)
+                // Notify pet owner — in-app + push (fire-and-forget)
+                const notifTitle = `Alguien esta interesado en adoptar a ${pet.name}`;
+                const notifBody = 'Tienes un nuevo mensaje sobre tu mascota en adopcion';
                 supabase.from('notifications').insert({
                     user_id: pet.user_id,
                     type: 'adoption',
-                    title: `Alguien esta interesado en adoptar a ${pet.name}`,
-                    body: 'Tienes un nuevo mensaje sobre tu mascota en adopcion',
+                    title: notifTitle,
+                    body: notifBody,
                     entity_id: conv.id,
                 });
+                sendPush(pet.user_id, notifTitle, notifBody, { type: 'adoption', entity_id: conv.id });
                 navigate(`/chat/${conv.id}`);
             }
         } catch (err) {

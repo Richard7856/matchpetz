@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1069708105212",
+    "project_id": "studio-2311149216-ec325",
+    "storage_bucket": "studio-2311149216-ec325.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069708105212:android:371b15eb31def5c339ce79",
+        "android_client_info": {
+          "package_name": "com.matchpetz.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNI-S-c4uKa6Vh7SU_TW8an6r-2_AdJUY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
