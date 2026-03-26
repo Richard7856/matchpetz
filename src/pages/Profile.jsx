@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, ChevronRight, Heart, Trash2, Plus, PawPrint, Camera, Lock, Grid3X3, MessageCircle, Award } from 'lucide-react';
+import { Settings, LogOut, ChevronRight, Heart, Trash2, Plus, PawPrint, Camera, Lock, Grid3X3, MessageCircle, Award, Bookmark } from 'lucide-react';
 import { supabase } from '../supabase';
 import { getAvatarUrl } from '../utils/avatar';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,6 +14,7 @@ const TABS = [
     { key: 'posts', icon: Grid3X3, label: 'Posts' },
     { key: 'mascotas', icon: PawPrint, label: 'Mascotas' },
     { key: 'adopciones', icon: Heart, label: 'Adopciones' },
+    { key: 'guardados', icon: Bookmark, label: 'Guardados' },
     { key: 'config', icon: Settings, label: 'Config' },
 ];
 
@@ -28,6 +29,9 @@ const Profile = () => {
     const [userPosts, setUserPosts] = useState([]);
     const [likedSet, setLikedSet] = useState(new Set());
     const [myStories, setMyStories] = useState([]);
+    const [savedPosts, setSavedPosts] = useState([]);
+    const [followerCount, setFollowerCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState(null);
     const [activeTab, setActiveTab] = useState('posts');
@@ -40,7 +44,7 @@ const Profile = () => {
         if (!user) return;
         const load = async () => {
             try {
-                const [profileRes, petsRes, rolesRes, personalPetsRes, adoptionConvsRes, postsRes, likesRes, storiesRes] = await Promise.all([
+                const [profileRes, petsRes, rolesRes, personalPetsRes, adoptionConvsRes, postsRes, likesRes, storiesRes, followersRes, followingRes, savedRes] = await Promise.all([
                     supabase.from('profiles').select('id, display_name, email, avatar_url, stats, instagram, facebook, twitter, tiktok, location').eq('id', user.id).single(),
                     supabase.from('adoption_pets').select('id, name, type, image_url, status').eq('user_id', user.id).order('created_at', { ascending: false }),
                     supabase.from('business_roles').select('id, role_type, business_name, status, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
@@ -49,6 +53,9 @@ const Profile = () => {
                     supabase.from('posts').select('id, image_url, caption, location, likes_count, comments_count, visibility, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
                     supabase.from('post_likes').select('post_id').eq('user_id', user.id),
                     supabase.from('stories').select('id, image_url, created_at').eq('user_id', user.id).gt('expires_at', new Date().toISOString()),
+                    supabase.from('user_follows').select('id', { count: 'exact', head: true }).eq('following_id', user.id),
+                    supabase.from('user_follows').select('id', { count: 'exact', head: true }).eq('follower_id', user.id),
+                    supabase.from('saved_posts').select('post_id, posts(id, image_url, caption, location, likes_count, comments_count, visibility, created_at, user_id)').eq('user_id', user.id).order('created_at', { ascending: false }),
                 ]);
                 if (profileRes.error) throw profileRes.error;
                 setProfile(profileRes.data || null);
@@ -59,6 +66,9 @@ const Profile = () => {
                 setUserPosts(postsRes.data || []);
                 setLikedSet(new Set((likesRes.data || []).map(l => l.post_id)));
                 setMyStories(storiesRes.data || []);
+                setFollowerCount(followersRes.count || 0);
+                setFollowingCount(followingRes.count || 0);
+                setSavedPosts((savedRes.data || []).map(s => s.posts).filter(Boolean));
             } catch (err) {
                 setLoadError('No se pudo cargar el perfil.');
             } finally {
@@ -150,12 +160,12 @@ const Profile = () => {
                             <span style={st.statLabel}>Posts</span>
                         </div>
                         <div style={st.statBox}>
-                            <span style={st.statValue}>{myPersonalPets.length + myPets.length}</span>
-                            <span style={st.statLabel}>Mascotas</span>
+                            <span style={st.statValue}>{followerCount}</span>
+                            <span style={st.statLabel}>Seguidores</span>
                         </div>
                         <div style={st.statBox}>
-                            <span style={st.statValue}>{myAdoptions.length}</span>
-                            <span style={st.statLabel}>Adopciones</span>
+                            <span style={st.statValue}>{followingCount}</span>
+                            <span style={st.statLabel}>Siguiendo</span>
                         </div>
                     </div>
                 </div>
@@ -272,6 +282,33 @@ const Profile = () => {
                             </>
                         )}
                     </div>
+                )}
+
+                {activeTab === 'guardados' && (
+                    <>
+                        {savedPosts.length === 0 ? (
+                            <div style={st.emptyTab}>
+                                <Bookmark size={40} color="#ccc" />
+                                <p style={st.emptyText}>No tienes publicaciones guardadas</p>
+                            </div>
+                        ) : (
+                            <div style={st.grid}>
+                                {savedPosts.map((post) => (
+                                    <div key={post.id} style={st.gridCell} onClick={() => openPost(post)}>
+                                        <img src={post.image_url} alt="" style={st.gridImage} loading="lazy" />
+                                        <div style={st.gridOverlay}>
+                                            {(post.likes_count > 0) && (
+                                                <div style={st.gridStat}><Heart size={12} fill={likedSet.has(post.id) ? '#fff' : 'none'} color="#fff" /><span style={st.gridStatText}>{post.likes_count}</span></div>
+                                            )}
+                                            {post.comments_count > 0 && (
+                                                <div style={st.gridStat}><MessageCircle size={12} color="#fff" /><span style={st.gridStatText}>{post.comments_count}</span></div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {activeTab === 'config' && (

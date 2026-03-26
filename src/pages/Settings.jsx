@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, Lock, Trash2, Info, ChevronRight, FileText, Shield } from 'lucide-react';
+import { ArrowLeft, Bell, Lock, Trash2, Info, ChevronRight, FileText, Shield, Moon } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,8 +14,16 @@ const Settings = () => {
         eventos: localStorage.getItem('matchpetz_notif_eventos') !== 'false',
         mensajes: localStorage.getItem('matchpetz_notif_mensajes') !== 'false',
     });
+    const [darkMode, setDarkMode] = useState(() => localStorage.getItem('matchpetz_dark_mode') === 'true');
     const [resetMsg, setResetMsg] = useState('');
     const [resetLoading, setResetLoading] = useState(false);
+
+    const toggleDarkMode = () => {
+        const newVal = !darkMode;
+        setDarkMode(newVal);
+        localStorage.setItem('matchpetz_dark_mode', String(newVal));
+        document.documentElement.setAttribute('data-theme', newVal ? 'dark' : 'light');
+    };
 
     const toggleNotif = (key) => {
         const newVal = !notifs[key];
@@ -66,6 +74,20 @@ const Settings = () => {
                             </button>
                         </div>
                     ))}
+                </div>
+
+                {/* Apariencia */}
+                <div className="form-card" style={styles.card}>
+                    <h3 style={styles.sectionTitle}><Moon size={18} /> Apariencia</h3>
+                    <div style={styles.toggleRow}>
+                        <span style={styles.toggleLabel}>Modo oscuro</span>
+                        <button
+                            style={{ ...styles.toggle, backgroundColor: darkMode ? 'var(--color-primary)' : '#e0e0e0' }}
+                            onClick={toggleDarkMode}
+                        >
+                            <div style={{ ...styles.toggleKnob, transform: darkMode ? 'translateX(20px)' : 'translateX(0)' }} />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Cuenta */}

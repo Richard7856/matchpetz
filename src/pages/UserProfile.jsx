@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronRight, MessageCircle } from 'lucide-react';
+import { ChevronRight, MessageCircle, UserPlus, UserCheck } from 'lucide-react';
 import { supabase } from '../supabase';
 import { getAvatarUrl } from '../utils/avatar';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,26 +13,67 @@ import LoadingState from '../components/LoadingState';
 const UserProfile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, profile: authProfile } = useAuth();
     const [profile, setProfile] = useState(null);
     const [pets, setPets] = useState([]);
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followerCount, setFollowerCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
+    const [followLoading, setFollowLoading] = useState(false);
+    const [postCount, setPostCount] = useState(0);
 
     useEffect(() => {
         const load = async () => {
-            const [{ data: p }, { data: petsList }, { data: rolesList }] = await Promise.all([
+            const queries = [
                 supabase.from('profiles').select('*').eq('id', id).single(),
                 supabase.from('pets').select('id, name, species, breed, image_url').eq('owner_id', id),
                 supabase.from('business_roles').select('*').eq('user_id', id).eq('status', 'approved'),
-            ]);
-            setProfile(p);
-            setPets(petsList || []);
-            setRoles(rolesList || []);
+                supabase.from('user_follows').select('id', { count: 'exact', head: true }).eq('following_id', id),
+                supabase.from('user_follows').select('id', { count: 'exact', head: true }).eq('follower_id', id),
+                supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', id),
+            ];
+            if (user) {
+                queries.push(supabase.from('user_follows').select('id').eq('follower_id', user.id).eq('following_id', id).maybeSingle());
+            }
+            const results = await Promise.all(queries);
+            setProfile(results[0].data);
+            setPets(results[1].data || []);
+            setRoles(results[2].data || []);
+            setFollowerCount(results[3].count || 0);
+            setFollowingCount(results[4].count || 0);
+            setPostCount(results[5].count || 0);
+            if (user) {
+                setIsFollowing(!!results[6].data);
+            }
             setLoading(false);
         };
         load();
-    }, [id]);
+    }, [id, user]);
+
+    const handleFollowToggle = async () => {
+        if (!user || user.id === id || followLoading) return;
+        setFollowLoading(true);
+        if (isFollowing) {
+            await supabase.from('user_follows').delete().eq('follower_id', user.id).eq('following_id', id);
+            setIsFollowing(false);
+            setFollowerCount(c => Math.max(0, c - 1));
+        } else {
+            await supabase.from('user_follows').insert({ follower_id: user.id, following_id: id });
+            setIsFollowing(true);
+            setFollowerCount(c => c + 1);
+            // Notify the user being followed
+            const displayName = authProfile?.display_name || 'Alguien';
+            supabase.from('notifications').insert({
+                user_id: id,
+                type: 'message',
+                title: `${displayName} te empezo a seguir`,
+                body: '',
+            });
+        }
+        setFollowLoading(false);
+    };
 
     const handleSendMessage = async () => {
         if (!user || user.id === id) return;
@@ -67,8 +108,6 @@ const UserProfile = () => {
     if (loading) return <div style={styles.loading}><LoadingState /></div>;
     if (!profile) return <div style={styles.loading}>Perfil no encontrado</div>;
 
-    const stats = profile.stats || { pets: 0, friends: 0, impacts: 0 };
-
     return (
         <div style={styles.container} className="fade-in">
             <AppBar title="Perfil" />
@@ -93,25 +132,36 @@ const UserProfile = () => {
                         </div>
                     </div>
 
-                    <button style={styles.messageBtn} onClick={handleSendMessage}>
-                        <MessageCircle size={18} />
-                        Enviar mensaje
-                    </button>
+                    <div style={styles.btnRow}>
+                        {user && user.id !== id && (
+                            <button
+                                style={isFollowing ? styles.followingBtn : styles.followBtn}
+                                onClick={handleFollowToggle}
+                                disabled={followLoading}
+                            >
+                                {isFollowing ? <><UserCheck size={16} /> Siguiendo</> : <><UserPlus size={16} /> Seguir</>}
+                            </button>
+                        )}
+                        <button style={styles.messageBtn} onClick={handleSendMessage}>
+                            <MessageCircle size={18} />
+                            Enviar mensaje
+                        </button>
+                    </div>
 
                     <div style={styles.statsRow}>
                         <div style={styles.statBox}>
-                            <span style={styles.statValue}>{stats.pets ?? 0}</span>
-                            <span style={styles.statLabel}>Mascotas</span>
+                            <span style={styles.statValue}>{postCount}</span>
+                            <span style={styles.statLabel}>Posts</span>
                         </div>
                         <div style={styles.statDivider} />
                         <div style={styles.statBox}>
-                            <span style={styles.statValue}>{stats.friends ?? 0}</span>
-                            <span style={styles.statLabel}>Amigos</span>
+                            <span style={styles.statValue}>{followerCount}</span>
+                            <span style={styles.statLabel}>Seguidores</span>
                         </div>
                         <div style={styles.statDivider} />
                         <div style={styles.statBox}>
-                            <span style={styles.statValue}>{stats.impacts ?? 0}</span>
-                            <span style={styles.statLabel}>Impactos</span>
+                            <span style={styles.statValue}>{followingCount}</span>
+                            <span style={styles.statLabel}>Siguiendo</span>
                         </div>
                     </div>
                 </div>
@@ -181,8 +231,43 @@ const styles = {
     petImg: { width: 48, height: 48, borderRadius: '12px', backgroundSize: 'cover', backgroundPosition: 'center' },
     roleCard: { display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: '#fff', padding: '0.75rem', borderRadius: '16px', marginBottom: '0.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' },
     roleIconBg: { width: 40, height: 40, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    btnRow: {
+        display: 'flex',
+        gap: '0.5rem',
+        marginBottom: '1.25rem',
+    },
+    followBtn: {
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.4rem',
+        backgroundColor: 'var(--color-primary)',
+        color: '#fff',
+        border: 'none',
+        padding: '0.8rem',
+        borderRadius: '12px',
+        fontSize: '0.95rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+    },
+    followingBtn: {
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.4rem',
+        backgroundColor: '#f0f0f0',
+        color: 'var(--color-text-dark)',
+        border: 'none',
+        padding: '0.8rem',
+        borderRadius: '12px',
+        fontSize: '0.95rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+    },
     messageBtn: {
-        width: '100%',
+        flex: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -192,10 +277,9 @@ const styles = {
         border: 'none',
         padding: '0.8rem',
         borderRadius: '12px',
-        fontSize: '1rem',
+        fontSize: '0.95rem',
         fontWeight: 'bold',
         cursor: 'pointer',
-        marginBottom: '1.25rem',
     },
 };
 

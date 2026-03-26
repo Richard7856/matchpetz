@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Send, MapPin, X, Trash2, MoreHorizontal, Flag, Ban } from 'lucide-react';
+import { Heart, MessageCircle, Send, MapPin, X, Trash2, MoreHorizontal, Flag, Ban, Bookmark, Share2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { getAvatarUrl } from '../utils/avatar';
 import { timeAgo } from '../utils/formatters';
@@ -20,6 +20,8 @@ const PostDetail = ({ post, onClose, user, profile, onLikeToggle, onDelete }) =>
     const [liked, setLiked] = useState(post._liked || false);
     const [likesCount, setLikesCount] = useState(post.likes_count || 0);
     const [showHeart, setShowHeart] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [shareToast, setShareToast] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportReason, setReportReason] = useState('');
@@ -28,6 +30,14 @@ const PostDetail = ({ post, onClose, user, profile, onLikeToggle, onDelete }) =>
     const lastTapRef = useRef(0);
 
     const isOwner = user && post.user_id === user.id;
+
+    useEffect(() => {
+        if (user) {
+            supabase.from('saved_posts').select('id').eq('user_id', user.id).eq('post_id', post.id).maybeSingle().then(({ data }) => {
+                if (data) setSaved(true);
+            });
+        }
+    }, [post.id, user]);
 
     useEffect(() => {
         const load = async () => {
@@ -122,6 +132,36 @@ const PostDetail = ({ post, onClose, user, profile, onLikeToggle, onDelete }) =>
         onClose();
     };
 
+    const toggleSave = async () => {
+        if (!user) return;
+        if (saved) {
+            await supabase.from('saved_posts').delete().eq('user_id', user.id).eq('post_id', post.id);
+            setSaved(false);
+        } else {
+            await supabase.from('saved_posts').insert({ user_id: user.id, post_id: post.id });
+            setSaved(true);
+        }
+    };
+
+    const handleShare = async () => {
+        const shareUrl = window.location.origin + '/explore';
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `${post._authorName} en MatchPetz`,
+                    text: post.caption || 'Mira esta publicacion en MatchPetz',
+                    url: shareUrl,
+                });
+            } catch { /* user cancelled */ }
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                setShareToast(true);
+                setTimeout(() => setShareToast(false), 2000);
+            } catch { /* clipboard failed */ }
+        }
+    };
+
     const submitComment = async (e) => {
         e.preventDefault();
         if (!newComment.trim() || !user || sending) return;
@@ -213,7 +253,19 @@ const PostDetail = ({ post, onClose, user, profile, onLikeToggle, onDelete }) =>
                             <MessageCircle size={22} color="var(--color-text-dark)" />
                             <span style={ms.actionCount}>{comments.length}</span>
                         </div>
+                        <button style={ms.actionBtn} onClick={handleShare}>
+                            <Share2 size={22} color="var(--color-text-dark)" />
+                        </button>
+                        <div style={{ flex: 1 }} />
+                        {user && (
+                            <button style={ms.actionBtn} onClick={toggleSave}>
+                                <Bookmark size={22} fill={saved ? 'var(--color-text-dark)' : 'none'} color="var(--color-text-dark)" />
+                            </button>
+                        )}
                     </div>
+                    {shareToast && (
+                        <div style={ms.toast}>Enlace copiado al portapapeles</div>
+                    )}
 
                     {post.caption && <p style={ms.caption}><strong>{post._authorName || 'Usuario'}</strong> {post.caption}</p>}
                     {post.location && (
@@ -320,6 +372,7 @@ const ms = {
     reportModal: { backgroundColor: '#fff', borderRadius: '20px', padding: '1.5rem', maxWidth: '380px', width: '100%', maxHeight: '80vh', overflowY: 'auto' },
     reportOption: { display: 'block', width: '100%', padding: '0.75rem 1rem', border: '1.5px solid #e0e0e0', borderRadius: '12px', background: 'none', fontSize: '0.9rem', fontWeight: '500', color: 'var(--color-text-dark)', cursor: 'pointer', marginBottom: '0.5rem', textAlign: 'left' },
     reportSubmit: { width: '100%', padding: '0.85rem', borderRadius: '50px', border: 'none', backgroundColor: '#e53935', color: '#fff', fontSize: '1rem', fontWeight: '700', cursor: 'pointer', marginTop: '0.75rem' },
+    toast: { margin: '0 1rem', padding: '0.5rem 1rem', backgroundColor: '#333', color: '#fff', borderRadius: '8px', fontSize: '0.85rem', textAlign: 'center' },
 };
 
 export default PostDetail;
