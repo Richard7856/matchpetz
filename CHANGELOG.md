@@ -1,0 +1,220 @@
+# Changelog — MatchPetz
+
+## Sesion 26 de Marzo 2026
+
+### Resumen
+Implementacion completa de los 3 tiers de mejoras (Quick Wins, Social Engagement, Seguridad), auditoria de codigo, neumorfismo, y multiples fixes de UX/UI para dejar la app lista para Play Store.
+
+---
+
+## Tier 1 — Quick Wins
+
+### Borrar posts propios
+- Icono de basura (rojo) visible en PostDetail cuando eres el dueño del post
+- Dialogo de confirmacion antes de eliminar
+- El post desaparece del grid inmediatamente despues de borrar
+
+### Notificaciones de likes
+- Cuando alguien da like a tu post, recibes notificacion in-app
+- Titulo: "{nombre} le dio like a tu publicacion"
+- Toque en la notificacion abre el post
+
+### Olvide mi contrasena
+- Link "Olvidaste tu contrasena?" debajo del boton de login
+- Flujo: ingresa email → envia link de reset via Supabase Auth
+- Mensaje de exito: "Revisa tu correo para restablecer tu contrasena"
+
+### Busqueda global en Explore/Discover
+- Barra de busqueda siempre visible arriba del grid de fotos
+- Filtro en tiempo real por caption o nombre de autor
+- Funciona tanto en vista standalone como embebida en Discover
+
+### Pull-to-refresh
+- La busqueda actualiza el feed al limpiar y recargar
+
+---
+
+## Tier 2 — Engagement Social
+
+### Sistema de Seguir/Dejar de seguir
+- **Tabla nueva:** `user_follows` con RLS (cualquiera lee, solo el dueño gestiona)
+- Boton "Seguir" (naranja) / "Siguiendo" (gris) en perfiles de otros usuarios
+- Notificacion automatica cuando alguien te empieza a seguir
+- Stats actualizados en Profile y UserProfile: Posts | Seguidores | Siguiendo
+
+### Favoritos / Guardados
+- **Tabla nueva:** `saved_posts` con RLS
+- Icono de bookmark en PostDetail (relleno cuando guardado, outline cuando no)
+- Nueva pestana "Guardados" (5ta) en el perfil del usuario
+- Grid identico al de publicaciones con los posts guardados
+- Toggle guardar/quitar con feedback visual inmediato
+
+### Compartir posts
+- Boton de compartir en la barra de acciones de PostDetail
+- **En movil:** abre la hoja de compartir nativa del sistema operativo (navigator.share)
+- **En desktop:** copia el enlace al portapapeles con toast de confirmacion
+
+### Modo oscuro
+- Variables CSS completas para tema oscuro en index.css
+- Soporte automatico: respeta `prefers-color-scheme` del sistema
+- Toggle manual en Settings → Apariencia
+- Persiste la preferencia en localStorage
+- Se aplica antes del render de React (sin flash)
+- Estilos oscuros para: fondos, cards, inputs, navegacion, formularios
+
+---
+
+## Tier 3 — Seguridad y Retencion
+
+### Reportar contenido
+- **Tabla nueva:** `reports` con 7 tipos de contenido y 6 razones de reporte
+- Menu "..." en PostDetail con opciones de reportar
+- Modal con seleccion de motivo: spam, contenido inapropiado, maltrato animal, acoso, fraude, otro
+- Confirmacion visual despues de enviar reporte
+- Politicas RLS: usuarios solo pueden crear y ver sus propios reportes
+
+### Bloquear usuarios
+- **Tabla nueva:** `user_blocks` con constraint UNIQUE
+- Opcion "Bloquear usuario" en menu "..." de PostDetail
+- Dialogo de confirmacion antes de bloquear
+- Al bloquear, se cierra el modal y el contenido del usuario bloqueado se oculta
+
+### Pagina de Settings (nueva)
+- Ruta: `/settings`
+- **Notificaciones:** Toggles para adopcion, eventos, mensajes (persistidos en localStorage)
+- **Apariencia:** Toggle de modo oscuro
+- **Cuenta:** Boton "Cambiar contrasena" (envia email de reset), enlace "Eliminar cuenta"
+- **Informacion:** Version de la app (1.0.0), enlaces a Terminos y Politica de Privacidad
+- Accesible desde la pestana Config del perfil
+
+### Onboarding para nuevos usuarios
+- Tutorial de 4 slides con soporte de swipe
+- Slides: Adopta con amor / Conecta / Descubre / Comparte
+- Indicadores de puntos e iconos tematicos (Heart, Users, MapPin, Camera)
+- Boton "Siguiente" y "Comenzar" en el ultimo slide
+- Se muestra solo una vez (flag en localStorage)
+- Accesible desde Home al primer inicio
+
+---
+
+## Auditoria de Codigo
+
+### Errores criticos corregidos
+- **Catch blocks vacios:** Agregado logging de warnings en EventDetail, AlertDetail, Explore, Adoption, AdoptionDetail
+- **Console.logs en produccion:** Eliminados de usePushNotifications, pushNotify, StoriesRow, Profile
+
+### Rendimiento
+- **loading="lazy"** agregado a todas las imagenes en listas: AttendeePreview, MultiImageUpload, ReviewSection, StoriesRow, StoryViewer
+- **select('*')** reemplazado con columnas especificas en ServiceDetail
+
+### Verificacion
+- Key props verificados en todos los .map() renders
+- Build limpio sin errores ni warnings
+
+---
+
+## Diseno — Neumorfismo Sutil
+
+### StoriesRow
+- Circulos con sombra neumorfica suave
+- Anillo activo con glow naranja
+- Anillo inactivo con aspecto hundido sutil
+- Badge "+" con gradiente y sombra
+
+### CSS Global (index.css)
+- `.form-input`: Sombras inset (aspecto hundido en la superficie)
+- `.form-card`: Sombras elevadas duales con borde blanco semi-transparente
+- `.form-submit-btn`: Glow naranja neumorfico
+- Nuevas clases utilitarias: `.card-neu`, `.card-neu-inset`, `.btn-neu`
+
+### Home
+- Quick action icons con sombras neumorficas
+- Event cards con estilo elevado y borde blanco
+
+### BottomNav
+- Eliminado borde duro superior
+- Sombra suave hacia arriba
+
+---
+
+## Fixes de UX/UI
+
+### PostDetail — contenido cortado
+- Max height reducido a 85vh para evitar overflow
+- Safe-area padding en el formulario de comentarios
+- El contenido ya no se esconde detras del bottom nav
+
+### Explore — grid encimado
+- Margen corregido en barra de busqueda
+- Padding inferior de 5rem en el grid para que la ultima fila sea visible
+
+### Onboarding — boton cortado
+- Padding inferior con safe-area-inset-bottom
+- Boton completamente visible en dispositivos con notch
+
+### Boton atras Android
+- Instalado `@capacitor/app` plugin
+- Al presionar atras: navega a la pantalla anterior (ya no cierra la app)
+- En pantalla principal: minimiza la app en vez de cerrarla
+
+### Adopcion — galeria de imagenes
+- Cards ahora muestran todas las imagenes (hasta 5) con navegacion
+- Flechas izquierda/derecha para cambiar imagen
+- Indicadores tipo Instagram (barras arriba)
+- Contador "1/5" en la esquina
+- Se reinicia a la primera imagen al pasar a la siguiente mascota
+
+### Iconos Android — logo lleno
+- Logo ocupa el 100% del espacio del icono (sin padding extra)
+- Foreground al 72% del canvas adaptivo (antes 50%)
+- Corrige el aspecto "encimado" en el launcher de Android
+
+---
+
+## Migraciones de Base de Datos Pendientes
+
+Ejecutar en el SQL Editor de Supabase (`https://supabase.com/dashboard/project/yilqentsmibgnzphztxc/sql`):
+
+```sql
+-- 009: Stories y visibilidad de posts
+CREATE TABLE IF NOT EXISTS public.stories (...);
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS visibility TEXT DEFAULT 'public';
+
+-- 010: Reportes y bloqueos
+CREATE TABLE IF NOT EXISTS public.reports (...);
+CREATE TABLE IF NOT EXISTS public.user_blocks (...);
+
+-- 011: Follows, guardados, preferencias
+CREATE TABLE IF NOT EXISTS public.user_follows (...);
+CREATE TABLE IF NOT EXISTS public.saved_posts (...);
+CREATE TABLE IF NOT EXISTS public.user_preferences (...);
+```
+
+Los archivos SQL completos estan en `supabase/migrations/`.
+
+---
+
+## Archivos Creados/Modificados
+
+### Nuevos (7)
+- `src/components/PostDetail.jsx` (extraido de Explore)
+- `src/components/StoryViewer.jsx`
+- `src/components/StoriesRow.jsx`
+- `src/components/Onboarding.jsx`
+- `src/pages/Settings.jsx`
+- `supabase/migrations/010_reports_blocks.sql`
+- `supabase/migrations/011_follows_saves_prefs.sql`
+
+### Modificados (12+)
+- `src/pages/Profile.jsx` — Rediseno completo con tabs Instagram
+- `src/pages/Explore.jsx` — Busqueda + filtro publico + PostDetail extraido
+- `src/pages/Home.jsx` — Stories + onboarding + notificaciones RSVP
+- `src/pages/Login.jsx` — Olvide mi contrasena
+- `src/pages/Adoption.jsx` — Galeria + notificaciones + tipos mascota
+- `src/pages/UserProfile.jsx` — Follow/unfollow + stats
+- `src/pages/CreatePost.jsx` — Toggle visibilidad
+- `src/pages/EventDetail.jsx` — Notificacion RSVP
+- `src/components/BottomNav.jsx` — Neumorfismo
+- `src/App.jsx` — Back button Android + ruta Settings
+- `src/index.css` — Neumorfismo + dark mode + safe areas
+- `src/main.jsx` — Dark mode init
