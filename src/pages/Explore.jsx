@@ -237,10 +237,9 @@ const styles = {
         overflowY: 'auto',
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '3px',
-        padding: '3px',
+        gap: '2px',
+        padding: '2px',
         alignContent: 'start',
-        paddingBottom: '5rem',
     },
     gridCell: {
         position: 'relative',
