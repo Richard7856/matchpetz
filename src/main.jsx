@@ -5,11 +5,9 @@ import 'leaflet/dist/leaflet.css'
 import './index.css'
 import App from './App.jsx'
 
-// Dark mode initialization
-const savedTheme = localStorage.getItem('matchpetz_dark_mode');
-if (savedTheme === 'true') {
-  document.documentElement.setAttribute('data-theme', 'dark');
-}
+// Force light theme (dark mode removed)
+document.documentElement.setAttribute('data-theme', 'light');
+localStorage.removeItem('matchpetz_dark_mode');
 
 // Fix default marker icon (broken with Vite/bundlers)
 delete L.Icon.Default.prototype._getIconUrl
