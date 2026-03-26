@@ -334,7 +334,7 @@ const PostDetail = ({ post, onClose, user, profile, onLikeToggle, onDelete }) =>
 
 const ms = {
     overlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', animation: 'fadeIn 0.2s ease' },
-    sheet: { width: '100%', maxWidth: '480px', maxHeight: '92vh', backgroundColor: '#fff', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', position: 'relative', animation: 'slideUp 0.3s ease' },
+    sheet: { width: '100%', maxWidth: '480px', maxHeight: '85vh', backgroundColor: '#fff', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', position: 'relative', animation: 'slideUp 0.3s ease', marginBottom: 'env(safe-area-inset-bottom, 0px)' },
     dragBar: { display: 'flex', justifyContent: 'center', padding: '10px 0 4px', flexShrink: 0 },
     dragHandle: { width: '36px', height: '4px', borderRadius: '2px', backgroundColor: '#d0d0d0' },
     headerActions: { position: 'absolute', top: '10px', right: '12px', display: 'flex', gap: '4px', zIndex: 2 },
@@ -363,7 +363,7 @@ const ms = {
     commentUser: { fontWeight: '700', fontSize: '0.82rem', color: 'var(--color-text-dark)' },
     commentText: { fontSize: '0.85rem', color: 'var(--color-text-dark)', lineHeight: 1.35 },
     commentTime: { fontSize: '0.7rem', color: 'var(--color-text-light)' },
-    commentForm: { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem', borderTop: '1px solid #f0f0f0', backgroundColor: '#fff', flexShrink: 0 },
+    commentForm: { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid #f0f0f0', backgroundColor: '#fff', flexShrink: 0 },
     commentInputAvatar: { width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 },
     commentInput: { flex: 1, border: 'none', outline: 'none', fontSize: '0.9rem', padding: '0.5rem 0', backgroundColor: 'transparent', fontFamily: 'inherit' },
     sendBtn: { background: 'none', border: 'none', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flexShrink: 0 },

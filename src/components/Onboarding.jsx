@@ -109,12 +109,13 @@ const styles = {
         maxWidth: '280px',
     },
     bottom: {
-        padding: '2rem',
+        padding: '2rem 2rem calc(2rem + env(safe-area-inset-bottom, 16px))',
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: '1.5rem',
+        flexShrink: 0,
     },
     dots: {
         display: 'flex',

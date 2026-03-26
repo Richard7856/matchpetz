@@ -1,5 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 import Splash from './pages/Splash';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthRedirect from './components/AuthRedirect';
@@ -107,12 +109,27 @@ function AppShell() {
     const [loading, setLoading] = useState(true);
     const isMobile = useIsMobile();
     const location = useLocation();
+    const navigate = useNavigate();
     const { user } = useAuth();
     usePushNotifications(user);
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 2500);
         return () => clearTimeout(timer);
+    }, []);
+
+    // Android hardware back button — navigate back instead of closing app
+    useEffect(() => {
+        if (!Capacitor.isNativePlatform()) return;
+        const handler = CapApp.addListener('backButton', ({ canGoBack }) => {
+            if (canGoBack) {
+                window.history.back();
+            } else {
+                // On home/root, minimize the app instead of closing
+                CapApp.minimizeApp();
+            }
+        });
+        return () => { handler.then(h => h.remove()); };
     }, []);
 
     if (loading) return <Splash />;
