@@ -51,6 +51,7 @@ const BookAppointment = lazy(() => import('./pages/BookAppointment'));
 const CreateActivity = lazy(() => import('./pages/CreateActivity'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const CreatePost = lazy(() => import('./pages/CreatePost'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 const PATHS_WITHOUT_NAV = ['/', '/login', '/complete-profile'];
 
@@ -97,6 +98,7 @@ function AppRoutes() {
             <Route path="/activities/new" element={<ProtectedRoute><CreateActivity /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/posts/new" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Routes>
     );
 }

@@ -298,6 +298,14 @@ const Profile = () => {
                             <span style={{ color: 'var(--color-primary)', fontWeight: '600', marginLeft: '0.4rem' }}>Activar rol de negocio</span>
                         </button>
 
+                        <div style={st.listItem} onClick={() => navigate('/settings')}>
+                            <div style={{ ...st.listThumb, backgroundColor: '#f3f4f6' }}>
+                                <Settings size={20} color="var(--color-text-light)" />
+                            </div>
+                            <div style={{ flex: 1 }}><span style={st.listName}>Configuracion</span><span style={st.listSub}>Notificaciones, cuenta, informacion</span></div>
+                            <ChevronRight size={18} color="var(--color-text-light)" />
+                        </div>
+
                         <div style={{ marginTop: '2rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
                                 <a href="/legal.html#terminos" target="_blank" rel="noopener noreferrer" style={st.legalLink}>Terminos y Condiciones</a>
@@ -310,7 +318,7 @@ const Profile = () => {
                 )}
             </div>
 
-            {selectedPost && <PostDetail post={selectedPost} onClose={() => setSelectedPost(null)} user={user} profile={profile} onLikeToggle={handleLikeToggle} />}
+            {selectedPost && <PostDetail post={selectedPost} onClose={() => setSelectedPost(null)} user={user} profile={profile} onLikeToggle={handleLikeToggle} onDelete={(id) => setUserPosts(prev => prev.filter(p => p.id !== id))} />}
             {storyViewer && myStories.length > 0 && <StoryViewer userStories={[{ user_id: user.id, display_name: displayName, avatar_url: avatarUrl, stories: myStories }]} initialUserIndex={0} onClose={() => setStoryViewer(false)} />}
         </div>
     );

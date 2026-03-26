@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MessageCircle, Camera } from 'lucide-react';
+import { Heart, MessageCircle, Camera, Search } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationBell from '../components/NotificationBell';
@@ -17,6 +17,7 @@ const Explore = ({ embedded = false }) => {
     const [loading, setLoading] = useState(true);
     const [selectedPost, setSelectedPost] = useState(null);
     const [likedSet, setLikedSet] = useState(new Set());
+    const [searchQuery, setSearchQuery] = useState('');
 
     /* load posts + user likes */
     useEffect(() => {
@@ -73,9 +74,15 @@ const Explore = ({ embedded = false }) => {
         });
     }, []);
 
+    const handleDelete = (postId) => {
+        setPosts(prev => prev.filter(p => p.id !== postId));
+    };
+
     const openPost = (post) => {
         setSelectedPost({ ...post, _liked: likedSet.has(post.id) });
     };
+
+    const filteredPosts = posts.filter(p => !searchQuery || p.caption?.toLowerCase().includes(searchQuery.toLowerCase()) || p._authorName?.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
         <div style={styles.container} className="fade-in">
@@ -92,10 +99,22 @@ const Explore = ({ embedded = false }) => {
                 </div>
             )}
 
+            {/* Search */}
+            <div style={styles.searchBar}>
+                <Search size={18} color="#9ca3af" style={{ flexShrink: 0 }} />
+                <input
+                    type="text"
+                    placeholder="Buscar por caption o autor..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={styles.searchInput}
+                />
+            </div>
+
             {/* Grid */}
             {loading ? (
                 <LoadingState message="Cargando publicaciones..." />
-            ) : posts.length === 0 ? (
+            ) : filteredPosts.length === 0 ? (
                 <div style={styles.emptyState}>
                     <Camera size={48} color="#ccc" />
                     <p style={styles.emptyTitle}>No hay publicaciones aún</p>
@@ -106,7 +125,7 @@ const Explore = ({ embedded = false }) => {
                 </div>
             ) : (
                 <div style={styles.grid}>
-                    {posts.map((post) => (
+                    {filteredPosts.map((post) => (
                         <div
                             key={post.id}
                             style={styles.gridCell}
@@ -145,6 +164,7 @@ const Explore = ({ embedded = false }) => {
                     user={user}
                     profile={profile}
                     onLikeToggle={handleLikeToggle}
+                    onDelete={handleDelete}
                 />
             )}
         </div>
@@ -192,6 +212,24 @@ const styles = {
         justifyContent: 'center',
         cursor: 'pointer',
         borderRadius: '50%',
+    },
+    searchBar: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.5rem 0.75rem',
+        margin: '0.5rem 0.5rem 0',
+        backgroundColor: '#f3f4f6',
+        borderRadius: '12px',
+        flexShrink: 0,
+    },
+    searchInput: {
+        flex: 1,
+        border: 'none',
+        background: 'none',
+        outline: 'none',
+        fontSize: '0.9rem',
+        color: 'var(--color-text-dark)',
     },
     /* grid */
     grid: {

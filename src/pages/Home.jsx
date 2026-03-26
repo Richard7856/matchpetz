@@ -11,6 +11,7 @@ import ErrorBox from '../components/ErrorBox';
 import NotificationBell from '../components/NotificationBell';
 import StoriesRow from '../components/StoriesRow';
 import { formatEventDate, formatTimeSlot } from '../utils/formatters';
+import Onboarding from '../components/Onboarding';
 import logoImg from '/logo.png';
 
 const Home = () => {
@@ -21,6 +22,7 @@ const Home = () => {
     const [eventsLoading, setEventsLoading] = useState(true);
     const [eventsError, setEventsError] = useState(null);
     const [tab, setTab] = useState('upcoming'); // 'upcoming' | 'past' | 'mine'
+    const [showOnboarding, setShowOnboarding] = useState(!localStorage.getItem('matchpetz_onboarded'));
 
     useEffect(() => {
         const loadEvents = async () => {
@@ -149,6 +151,10 @@ const Home = () => {
             </div>
         );
     };
+
+    if (showOnboarding) {
+        return <Onboarding onComplete={() => setShowOnboarding(false)} />;
+    }
 
     return (
         <div style={styles.container} className="fade-in">

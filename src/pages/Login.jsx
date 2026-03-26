@@ -12,6 +12,25 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showForgot, setShowForgot] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotMsg, setForgotMsg] = useState('');
+    const [forgotLoading, setForgotLoading] = useState(false);
+
+    const handleForgotPassword = async () => {
+        if (!forgotEmail.trim()) { setForgotMsg('Ingresa tu correo electronico.'); return; }
+        setForgotLoading(true);
+        setForgotMsg('');
+        try {
+            const { error: err } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), { redirectTo: window.location.origin + '/' });
+            if (err) throw err;
+            setForgotMsg('Revisa tu correo para restablecer tu contrasena');
+        } catch (err) {
+            setForgotMsg(err.message || 'Error al enviar el correo.');
+        } finally {
+            setForgotLoading(false);
+        }
+    };
 
     // On mount: check if user is already logged in — redirect if so.
     // This handles the case where a logged-in user navigates to /login.
@@ -195,10 +214,38 @@ const Login = () => {
                     </button>
                 </form>
 
+                {mode === 'login' && !showForgot && (
+                    <button type="button" style={styles.forgotBtn} onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotMsg(''); }}>
+                        Olvidaste tu contrasena?
+                    </button>
+                )}
+
+                {showForgot && (
+                    <div style={{ marginBottom: '1rem' }}>
+                        <div style={styles.inputWrap}>
+                            <Mail size={20} color="#9e9e9e" style={styles.inputIcon} />
+                            <input
+                                type="email"
+                                placeholder="Correo electronico"
+                                value={forgotEmail}
+                                onChange={(e) => setForgotEmail(e.target.value)}
+                                style={styles.input}
+                            />
+                        </div>
+                        {forgotMsg && <div style={{ ...styles.errorBox, marginTop: '0.75rem', marginBottom: 0, backgroundColor: forgotMsg.includes('Revisa') ? '#ecfdf5' : '#fef2f2', color: forgotMsg.includes('Revisa') ? '#065f46' : '#b91c1c' }}>{forgotMsg}</div>}
+                        <button type="button" style={{ ...styles.submitBtn, marginTop: '0.75rem' }} onClick={handleForgotPassword} disabled={forgotLoading}>
+                            {forgotLoading ? 'Enviando...' : 'Enviar enlace'}
+                        </button>
+                        <button type="button" style={{ ...styles.forgotBtn, marginTop: '0.5rem' }} onClick={() => { setShowForgot(false); setForgotMsg(''); }}>
+                            Volver al inicio de sesion
+                        </button>
+                    </div>
+                )}
+
                 <button
                     type="button"
                     style={styles.toggleMode}
-                    onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
+                    onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setShowForgot(false); setForgotMsg(''); }}
                 >
                     {mode === 'login'
                         ? 'No tienes cuenta? Registrate'
@@ -330,6 +377,19 @@ const styles = {
         cursor: 'pointer',
         marginTop: '0.25rem',
         boxShadow: '0 2px 8px rgba(220, 38, 38, 0.35)',
+    },
+    forgotBtn: {
+        display: 'block',
+        width: '100%',
+        textAlign: 'center',
+        background: 'none',
+        border: 'none',
+        color: '#6b7280',
+        fontSize: '0.85rem',
+        cursor: 'pointer',
+        padding: '0.4rem',
+        marginBottom: '0.5rem',
+        minHeight: 'auto',
     },
     toggleMode: {
         display: 'block',
