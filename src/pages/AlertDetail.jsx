@@ -89,6 +89,7 @@ const AlertDetail = () => {
 
             navigate(`/chat/${newConv.id}`);
         } catch (err) {
+            console.warn('Contact error:', err);
         } finally {
             setContacting(false);
         }

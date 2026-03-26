@@ -98,8 +98,8 @@ const Profile = () => {
             const { data: { publicUrl } } = supabase.storage.from('matchpet-images').getPublicUrl(path);
             await supabase.from('stories').insert({ user_id: user.id, image_url: publicUrl });
             setMyStories(prev => [...prev, { id: Date.now().toString(), image_url: publicUrl, created_at: new Date().toISOString() }]);
-        } catch (err) {
-            console.error('Story upload error:', err);
+        } catch {
+            // Story upload failed — silent
         } finally {
             setUploadingStory(false);
             if (storyFileRef.current) storyFileRef.current.value = '';

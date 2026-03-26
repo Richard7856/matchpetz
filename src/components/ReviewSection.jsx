@@ -127,7 +127,7 @@ const ReviewSection = ({ entityType, entityId, showForm = true }) => {
                             <div style={styles.reviewHeader}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     {r.reviewer_avatar && (
-                                        <img src={r.reviewer_avatar} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                                        <img src={r.reviewer_avatar} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} loading="lazy" />
                                     )}
                                     <span style={styles.reviewerName}>{r.reviewer_name || 'Usuario'}</span>
                                 </div>

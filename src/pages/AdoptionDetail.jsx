@@ -101,6 +101,7 @@ const AdoptionDetail = () => {
                 navigate(`/chat/${conv.id}`);
             }
         } catch (err) {
+            console.warn('Contact error:', err);
         } finally {
             setContacting(false);
         }

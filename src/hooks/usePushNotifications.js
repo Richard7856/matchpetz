@@ -29,7 +29,6 @@ export default function usePushNotifications(user) {
 
                 // Get the FCM token
                 PushNotifications.addListener('registration', async (token) => {
-                    console.log('Push token:', token.value);
                     // Save token to profile for server-side push
                     await supabase
                         .from('profiles')
@@ -37,13 +36,12 @@ export default function usePushNotifications(user) {
                         .eq('id', user.id);
                 });
 
-                PushNotifications.addListener('registrationError', (err) => {
-                    console.error('Push registration error:', err);
+                PushNotifications.addListener('registrationError', () => {
+                    // Push registration failed — silent
                 });
 
                 // Handle notification received while app is in foreground
-                PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                    console.log('Push received (foreground):', notification);
+                PushNotifications.addListener('pushNotificationReceived', () => {
                     // Could show an in-app toast here
                 });
 
@@ -62,8 +60,8 @@ export default function usePushNotifications(user) {
                         navigate('/notifications');
                     }
                 });
-            } catch (err) {
-                console.error('Push setup error:', err);
+            } catch {
+                // Push setup failed — silent
             }
         };
 

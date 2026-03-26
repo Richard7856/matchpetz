@@ -105,6 +105,7 @@ const AttendeePreview = ({ userId, onClose }) => {
                                 src={getAvatarUrl(profile.avatar_url, profile.id)}
                                 alt=""
                                 style={styles.avatar}
+                                loading="lazy"
                             />
                             <div>
                                 <h3 style={styles.name}>{profile.display_name || 'Usuario'}</h3>

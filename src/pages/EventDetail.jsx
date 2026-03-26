@@ -175,6 +175,7 @@ const EventDetail = () => {
                 await loadAttendeeData();
             }
         } catch (err) {
+            console.warn('RSVP error:', err);
         }
         setToggling(false);
     };

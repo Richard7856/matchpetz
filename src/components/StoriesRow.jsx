@@ -76,8 +76,8 @@ const StoriesRow = () => {
                     stories: [{ id: Date.now().toString(), image_url: publicUrl, created_at: new Date().toISOString() }],
                 }, ...userStories]);
             }
-        } catch (err) {
-            console.error('Story upload error:', err);
+        } catch {
+            // Story upload failed — silent
         } finally {
             setUploading(false);
             if (fileRef.current) fileRef.current.value = '';
@@ -101,7 +101,7 @@ const StoriesRow = () => {
                     }
                 }}>
                     <div style={{ ...s.avatarRing, ...(myHasStory ? s.activeRing : s.noRing) }}>
-                        <img src={getAvatarUrl(profile?.avatar_url)} alt="" style={s.avatar} />
+                        <img src={getAvatarUrl(profile?.avatar_url)} alt="" style={s.avatar} loading="lazy" />
                         {!myHasStory && (
                             <div style={s.addBadge}>
                                 <Plus size={12} color="#fff" />
@@ -118,7 +118,7 @@ const StoriesRow = () => {
                         setViewerData({ initialUserIndex: realIdx });
                     }}>
                         <div style={{ ...s.avatarRing, ...s.activeRing }}>
-                            <img src={getAvatarUrl(u.avatar_url)} alt="" style={s.avatar} />
+                            <img src={getAvatarUrl(u.avatar_url)} alt="" style={s.avatar} loading="lazy" />
                         </div>
                         <span style={s.name}>{u.display_name?.split(' ')[0] || 'Usuario'}</span>
                     </div>

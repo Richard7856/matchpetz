@@ -48,6 +48,7 @@ const Explore = ({ embedded = false }) => {
                     if (likes) setLikedSet(new Set(likes.map((l) => l.post_id)));
                 }
             } catch (err) {
+                console.warn('Posts load error:', err);
             } finally {
                 setLoading(false);
             }

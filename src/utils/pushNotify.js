@@ -17,8 +17,7 @@ export async function sendPush(userId, title, body = '', data = {}) {
         await supabase.functions.invoke('send-push', {
             body: { user_id: userId, title, body, data },
         });
-    } catch (err) {
+    } catch {
         // Silent fail — push is best-effort
-        console.log('Push send skipped:', err.message);
     }
 }

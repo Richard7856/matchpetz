@@ -38,8 +38,8 @@ const ServiceDetail = () => {
     useEffect(() => {
         const load = async () => {
             const [{ data: svc }, { data: revs }] = await Promise.all([
-                supabase.from('services').select('*').eq('id', id).single(),
-                supabase.from('service_reviews').select('*').eq('service_id', id).order('created_at', { ascending: false }),
+                supabase.from('services').select('id, name, type, description, location, phone, price_range, image_url, images, owner_id, instagram, specialty, rating, review_count, created_at').eq('id', id).single(),
+                supabase.from('service_reviews').select('id, service_id, user_id, user_name, rating, comment, created_at').eq('service_id', id).order('created_at', { ascending: false }),
             ]);
             setService(svc);
             setReviews(revs || []);

@@ -92,7 +92,7 @@ const StoryViewer = ({ userStories, initialUserIndex = 0, onClose }) => {
 
                 {/* User info */}
                 <div style={s.userRow}>
-                    <img src={getAvatarUrl(currentUser.avatar_url)} alt="" style={s.avatar} />
+                    <img src={getAvatarUrl(currentUser.avatar_url)} alt="" style={s.avatar} loading="lazy" />
                     <div style={{ flex: 1 }}>
                         <p style={s.userName}>{currentUser.display_name}</p>
                         <span style={s.storyTime}>{timeAgo(currentStory.created_at)}</span>
@@ -103,7 +103,7 @@ const StoryViewer = ({ userStories, initialUserIndex = 0, onClose }) => {
                 </div>
 
                 {/* Story image */}
-                <img src={currentStory.image_url} alt="" style={s.storyImage} />
+                <img src={currentStory.image_url} alt="" style={s.storyImage} loading="lazy" />
             </div>
         </div>
     );

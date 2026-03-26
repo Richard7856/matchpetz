@@ -95,6 +95,7 @@ const Adoption = () => {
                     return;
                 }
             } catch (err) {
+                console.warn('Adoption contact error:', err);
             } finally {
                 setContactingId(null);
             }

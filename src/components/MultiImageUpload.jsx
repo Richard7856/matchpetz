@@ -129,7 +129,7 @@ const MultiImageUpload = ({
                         borderRadius: '16px',
                     }}
                 >
-                    <img src={images[0]} alt="Principal" style={s.mainImage} />
+                    <img src={images[0]} alt="Principal" style={s.mainImage} loading="lazy" />
                     <div style={s.mainBadge}>Principal</div>
                     <button
                         type="button"
@@ -146,7 +146,7 @@ const MultiImageUpload = ({
                 <div style={s.thumbRow}>
                     {images.slice(1).map((url, i) => (
                         <div key={i} style={s.thumb} onClick={() => setAsMain(i + 1)}>
-                            <img src={url} alt="" style={s.thumbImage} />
+                            <img src={url} alt="" style={s.thumbImage} loading="lazy" />
                             <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); removeImage(i + 1); }}
