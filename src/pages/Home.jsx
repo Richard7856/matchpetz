@@ -9,6 +9,7 @@ import LoadingState from '../components/LoadingState';
 import { sendPush } from '../utils/pushNotify';
 import ErrorBox from '../components/ErrorBox';
 import NotificationBell from '../components/NotificationBell';
+import StoriesRow from '../components/StoriesRow';
 import { formatEventDate, formatTimeSlot } from '../utils/formatters';
 import logoImg from '/logo.png';
 
@@ -159,6 +160,7 @@ const Home = () => {
 
             {isMobile ? (
                 <>
+                    <StoriesRow />
                     <div style={styles.quickActions}>
                         {ACTION_ITEMS.map(({ path, bg, icon, label }) => (
                             <div key={path} style={styles.actionItem} onClick={() => navigate(path)}>

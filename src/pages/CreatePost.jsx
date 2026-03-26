@@ -17,6 +17,7 @@ const CreatePost = () => {
         caption: '',
         location: '',
         pet_id: '',
+        visibility: 'public',
     });
 
     /* load user's pets for tagging */
@@ -47,6 +48,7 @@ const CreatePost = () => {
             caption: form.caption.trim() || null,
             location: form.location.trim() || null,
             pet_id: form.pet_id || null,
+            visibility: form.visibility,
         });
 
         if (err) {
@@ -125,6 +127,19 @@ const CreatePost = () => {
                         </select>
                     </div>
                 )}
+
+                {/* Visibility toggle */}
+                <div style={styles.inputGroup}>
+                    <label style={styles.label}>Visibilidad</label>
+                    <select
+                        className="form-select"
+                        value={form.visibility}
+                        onChange={(e) => setForm((f) => ({ ...f, visibility: e.target.value }))}
+                    >
+                        <option value="public">Publico — visible para todos</option>
+                        <option value="private">Privado — solo tu</option>
+                    </select>
+                </div>
 
                 <button
                     type="submit"
