@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, X, Star, SlidersHorizontal, MapPin, Info, Plus, MessageCircle } from 'lucide-react';
+import { Heart, X, Star, SlidersHorizontal, MapPin, Info, Plus, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
 import AppBar from '../components/AppBar';
@@ -18,6 +18,7 @@ const Adoption = () => {
     const [typeFilter, setTypeFilter] = useState('todos');
     const [genderFilter, setGenderFilter] = useState('todos');
     const [contactingId, setContactingId] = useState(null);
+    const [imgIdx, setImgIdx] = useState(0);
 
     useEffect(() => {
         const load = async () => {
@@ -104,6 +105,7 @@ const Adoption = () => {
         setDirection(dir);
         setTimeout(() => {
             setCurrentIndex(prev => prev + 1);
+            setImgIdx(0);
             setDirection(null);
         }, 300);
     };
@@ -154,29 +156,53 @@ const Adoption = () => {
                             opacity: direction ? 0 : 1,
                         }}
                     >
-                        <div style={{ ...styles.imageContainer, backgroundImage: `url(${currentPet.image_url})` }}>
-                            <div style={styles.gradientOverlay}></div>
-                            <div style={styles.cardInfo}>
-                                <div style={styles.nameRow}>
-                                    <h3 style={styles.petName}>
-                                        {currentPet.name}, <span style={styles.petAge}>{currentPet.age}</span>
-                                    </h3>
-                                    <button style={styles.infoBtn}>
-                                        <Info size={16} color="#fff" />
-                                    </button>
+                        {(() => {
+                            const allImgs = currentPet.images?.length > 0 ? currentPet.images : currentPet.image_url ? [currentPet.image_url] : [];
+                            const totalImgs = allImgs.length;
+                            const currentImgUrl = allImgs[imgIdx] || currentPet.image_url || '';
+                            return (
+                                <div style={{ ...styles.imageContainer, backgroundImage: `url(${currentImgUrl})` }}>
+                                    {/* Image navigation */}
+                                    {totalImgs > 1 && (
+                                        <>
+                                            <div style={styles.imgIndicators}>
+                                                {allImgs.map((_, i) => (
+                                                    <div key={i} style={{ ...styles.imgDot, backgroundColor: i === imgIdx ? '#fff' : 'rgba(255,255,255,0.4)' }} />
+                                                ))}
+                                            </div>
+                                            <div style={styles.imgNavLeft} onClick={(e) => { e.stopPropagation(); setImgIdx(i => i > 0 ? i - 1 : totalImgs - 1); }}>
+                                                <ChevronLeft size={20} color="rgba(255,255,255,0.8)" />
+                                            </div>
+                                            <div style={styles.imgNavRight} onClick={(e) => { e.stopPropagation(); setImgIdx(i => i < totalImgs - 1 ? i + 1 : 0); }}>
+                                                <ChevronRight size={20} color="rgba(255,255,255,0.8)" />
+                                            </div>
+                                            <div style={styles.imgCounter}>{imgIdx + 1}/{totalImgs}</div>
+                                        </>
+                                    )}
+                                    <div style={styles.gradientOverlay}></div>
+                                    <div style={styles.cardInfo}>
+                                        <div style={styles.nameRow}>
+                                            <h3 style={styles.petName}>
+                                                {currentPet.name}, <span style={styles.petAge}>{currentPet.age}</span>
+                                            </h3>
+                                            <button style={styles.infoBtn} onClick={() => navigate(`/adoption/${currentPet.id}`)}>
+                                                <Info size={16} color="#fff" />
+                                            </button>
+                                        </div>
+                                        <div style={styles.locationRow}>
+                                            <MapPin size={16} color="#ddd" />
+                                            <span style={styles.distance}>{currentPet.location || 'CDMX'}</span>
+                                        </div>
+                                        <p style={styles.petDesc}>{currentPet.description}</p>
+                                        <div style={styles.tagRow}>
+                                            <span style={styles.tag}>{currentPet.type}</span>
+                                            {currentPet.breed && <span style={styles.tag}>{currentPet.breed}</span>}
+                                            {currentPet.gender && <span style={styles.tag}>{currentPet.gender}</span>}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style={styles.locationRow}>
-                                    <MapPin size={16} color="#ddd" />
-                                    <span style={styles.distance}>{currentPet.location || 'CDMX'}</span>
-                                </div>
-                                <p style={styles.petDesc}>{currentPet.description}</p>
-                                <div style={styles.tagRow}>
-                                    <span style={styles.tag}>{currentPet.type}</span>
-                                    {currentPet.breed && <span style={styles.tag}>{currentPet.breed}</span>}
-                                    {currentPet.gender && <span style={styles.tag}>{currentPet.gender}</span>}
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })()}
                     </div>
                 ) : (
                     <div style={styles.emptyState}>
@@ -284,6 +310,63 @@ const styles = {
         justifyContent: 'center',
         cursor: 'pointer',
         padding: 0
+    },
+    imgIndicators: {
+        position: 'absolute',
+        top: '12px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: '5px',
+        zIndex: 5,
+    },
+    imgDot: {
+        width: '24px',
+        height: '3px',
+        borderRadius: '2px',
+        transition: 'background-color 0.3s',
+    },
+    imgNavLeft: {
+        position: 'absolute',
+        left: '8px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        background: 'rgba(0,0,0,0.25)',
+        borderRadius: '50%',
+        width: '32px',
+        height: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 5,
+        cursor: 'pointer',
+    },
+    imgNavRight: {
+        position: 'absolute',
+        right: '8px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        background: 'rgba(0,0,0,0.25)',
+        borderRadius: '50%',
+        width: '32px',
+        height: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 5,
+        cursor: 'pointer',
+    },
+    imgCounter: {
+        position: 'absolute',
+        top: '12px',
+        right: '12px',
+        background: 'rgba(0,0,0,0.5)',
+        color: '#fff',
+        fontSize: '0.72rem',
+        fontWeight: '600',
+        padding: '2px 8px',
+        borderRadius: '10px',
+        zIndex: 5,
     },
     cardsArea: {
         flex: 1,
