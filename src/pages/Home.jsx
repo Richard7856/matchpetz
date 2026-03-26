@@ -316,7 +316,7 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-        boxShadow: 'var(--shadow-soft)',
+        boxShadow: '4px 4px 10px rgba(0,0,0,0.07), -3px -3px 8px rgba(255,255,255,0.95)',
     },
     actionLabel: {
         fontWeight: '600',
@@ -417,9 +417,11 @@ const styles = {
     emptyText: { color: 'var(--color-text-light)', fontSize: '0.9rem' },
     eventsList: { display: 'flex', flexDirection: 'column', gap: '1rem' },
     eventCard: {
-        backgroundColor: 'var(--color-surface)', borderRadius: '18px', overflow: 'hidden',
-        boxShadow: 'var(--shadow-neu)', display: 'flex', flexDirection: 'column', cursor: 'pointer',
-        transition: 'opacity 0.2s',
+        backgroundColor: 'var(--color-surface)', borderRadius: '20px', overflow: 'hidden',
+        boxShadow: '5px 5px 12px rgba(0,0,0,0.06), -4px -4px 10px rgba(255,255,255,0.9)',
+        border: '1px solid rgba(255,255,255,0.6)',
+        display: 'flex', flexDirection: 'column', cursor: 'pointer',
+        transition: 'transform 0.2s, box-shadow 0.2s',
     },
     eventHeader: {
         display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.75rem 1rem',

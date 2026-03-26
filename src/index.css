@@ -209,6 +209,38 @@ a {
   animation: heartBurstAnim 0.8s ease forwards;
 }
 
+/* ── Neumorphic card styles ── */
+.card-neu {
+  background: var(--color-background, #fdfdfd);
+  border-radius: 20px;
+  box-shadow: 5px 5px 12px rgba(0,0,0,0.06), -4px -4px 10px rgba(255,255,255,0.9);
+  border: 1px solid rgba(255,255,255,0.6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-neu:active {
+  transform: scale(0.98);
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.06), -2px -2px 6px rgba(255,255,255,0.9);
+}
+
+/* Inset neumorphic (pressed look) */
+.card-neu-inset {
+  background: var(--color-bg-soft, #eef0f4);
+  border-radius: 16px;
+  box-shadow: inset 3px 3px 6px rgba(0,0,0,0.06), inset -3px -3px 6px rgba(255,255,255,0.8);
+}
+
+/* Pill button neumorphic */
+.btn-neu {
+  background: var(--color-background, #fdfdfd);
+  border-radius: 50px;
+  border: none;
+  box-shadow: 4px 4px 10px rgba(0,0,0,0.07), -3px -3px 8px rgba(255,255,255,0.95);
+  transition: all 0.2s ease;
+}
+.btn-neu:active {
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.08), inset -2px -2px 5px rgba(255,255,255,0.8);
+}
+
 /* ── Card hover effect (for interactive cards) ── */
 .card-hover {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -248,21 +280,22 @@ img {
 .form-textarea {
   padding: 0.875rem 1rem;
   border-radius: 14px;
-  border: 1.5px solid #e8e8e8;
+  border: 1px solid rgba(0,0,0,0.06);
   font-size: 0.95rem;
-  background-color: #fff;
+  background-color: var(--color-bg-soft, #eef0f4);
   outline: none;
   width: 100%;
   box-sizing: border-box;
   font-family: inherit;
   color: var(--color-text-dark);
   transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.06), inset -2px -2px 5px rgba(255,255,255,0.8);
 }
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(238, 157, 43, 0.1);
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.06), inset -2px -2px 5px rgba(255,255,255,0.8), 0 0 0 3px rgba(238, 157, 43, 0.1);
 }
 .form-input::placeholder,
 .form-textarea::placeholder {
@@ -284,10 +317,11 @@ img {
   background: #fff;
   border-radius: 20px;
   padding: 1.25rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 5px 5px 12px rgba(0,0,0,0.06), -4px -4px 10px rgba(255,255,255,0.9);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  border: 1px solid rgba(255,255,255,0.6);
 }
 .form-label {
   font-size: 0.85rem;
@@ -334,7 +368,7 @@ img {
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(238, 157, 43, 0.3);
+  box-shadow: 5px 5px 12px rgba(238, 157, 43, 0.3), -3px -3px 8px rgba(255,255,255,0.2);
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   align-items: center;
@@ -343,7 +377,7 @@ img {
 }
 .form-submit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(238, 157, 43, 0.4);
+  box-shadow: 6px 6px 16px rgba(238, 157, 43, 0.35), -3px -3px 8px rgba(255,255,255,0.2);
 }
 .form-submit-btn:disabled {
   opacity: 0.6;

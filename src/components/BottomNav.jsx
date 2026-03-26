@@ -102,10 +102,10 @@ const styles = {
         display: 'flex',
         justifyContent: 'space-around',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--color-background, #fdfdfd)',
         padding: '0.5rem 0 calc(0.6rem + env(safe-area-inset-bottom, 0px))',
-        borderTop: '1px solid #f0f0f0',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.05)',
+        borderTop: 'none',
+        boxShadow: '0 -6px 16px rgba(0,0,0,0.06), 0 -2px 6px rgba(255,255,255,0.4)',
         zIndex: 100,
     },
     navItem: {
