@@ -55,17 +55,74 @@ const Notifications = () => {
         );
     };
 
-    const handleClick = (notif) => {
+    const handleClick = async (notif) => {
         if (!notif.read) markRead(notif.id);
-        // Navigate based on type + entity_id
-        if (notif.entity_id) {
-            switch (notif.type) {
-                case 'appointment': navigate('/appointments'); break;
-                case 'event': navigate(`/events/${notif.entity_id}`); break;
-                case 'message': navigate(`/chat/${notif.entity_id}`); break;
-                case 'adoption': navigate(`/chat/${notif.entity_id}`); break;
-                default: break;
-            }
+
+        switch (notif.type) {
+            case 'appointment':
+                navigate('/appointments');
+                break;
+            case 'event':
+                if (notif.entity_id) navigate(`/events/${notif.entity_id}`);
+                break;
+            case 'message':
+                if (notif.entity_id) navigate(`/chat/${notif.entity_id}`);
+                else navigate('/chat');
+                break;
+            case 'adoption':
+                // entity_id = conversation UUID (set when chat was created)
+                if (notif.entity_id) {
+                    navigate(`/chat/${notif.entity_id}`);
+                    break;
+                }
+                // Fallback: si no hay entity_id pero sí from_user_id, buscar/crear conversación
+                if (notif.from_user_id && user) {
+                    const { data: existing } = await supabase
+                        .from('conversations')
+                        .select('id')
+                        .or(
+                            `and(user1_id.eq.${user.id},user2_id.eq.${notif.from_user_id}),and(user1_id.eq.${notif.from_user_id},user2_id.eq.${user.id})`
+                        )
+                        .maybeSingle();
+
+                    if (existing) {
+                        // Guardar entity_id para que próximos clicks no necesiten lookup
+                        supabase.from('notifications').update({ entity_id: existing.id }).eq('id', notif.id);
+                        navigate(`/chat/${existing.id}`);
+                        break;
+                    }
+
+                    // Crear conversación nueva (el otro usuario ya mostró interés)
+                    const { data: fromProfile } = await supabase
+                        .from('profiles')
+                        .select('display_name')
+                        .eq('id', notif.from_user_id)
+                        .maybeSingle();
+
+                    const { data: conv } = await supabase
+                        .from('conversations')
+                        .insert({
+                            user1_id: notif.from_user_id,
+                            user2_id: user.id,
+                            participant_name: fromProfile?.display_name || 'Usuario',
+                            last_message: '',
+                        })
+                        .select('id')
+                        .single();
+
+                    if (conv) {
+                        supabase.from('notifications').update({ entity_id: conv.id }).eq('id', notif.id);
+                        navigate(`/chat/${conv.id}`);
+                    } else {
+                        navigate('/chat');
+                    }
+                } else {
+                    // Sin info suficiente — ir al inbox
+                    navigate('/chat');
+                }
+                break;
+            default:
+                break;
         }
     };
 

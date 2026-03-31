@@ -90,6 +90,7 @@ const Adoption = () => {
                         title: notifTitle,
                         body: notifBody,
                         entity_id: conv.id,
+                        from_user_id: user.id,
                     });
                     sendPush(pet.user_id, notifTitle, notifBody, { type: 'adoption', entity_id: conv.id });
                     navigate(`/chat/${conv.id}`);
