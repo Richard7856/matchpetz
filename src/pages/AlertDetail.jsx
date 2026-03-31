@@ -47,10 +47,14 @@ const AlertDetail = () => {
     }, [id]);
 
     const handleContact = async () => {
-        if (!user || !alert?.user_id || contacting) return;
-
-        // Don't chat with yourself
+        if (!user || contacting) return;
         if (alert.user_id === user.id) return;
+
+        // Alert has no registered owner — can't open chat
+        if (!alert.user_id) {
+            alert('Esta alerta no tiene un usuario registrado. No se puede iniciar un chat.');
+            return;
+        }
 
         setContacting(true);
         try {
@@ -61,7 +65,6 @@ const AlertDetail = () => {
                 .or(
                     `and(user1_id.eq.${user.id},user2_id.eq.${alert.user_id}),and(user1_id.eq.${alert.user_id},user2_id.eq.${user.id})`
                 )
-                .not('is_group', 'is', true)
                 .maybeSingle();
 
             if (existing) {
@@ -70,20 +73,19 @@ const AlertDetail = () => {
             }
 
             // Create new conversation
-            const myName = profile?.display_name || user.email?.split('@')[0] || 'Usuario';
             const { data: newConv, error } = await supabase
                 .from('conversations')
                 .insert({
                     user1_id: user.id,
                     user2_id: alert.user_id,
                     participant_name: alert.user_name || 'Usuario',
-                    last_message: null,
-                    is_group: false,
+                    last_message: `Sobre tu alerta: ${alert.pet_name ?? alert.petName}`,
                 })
                 .select('id')
                 .single();
 
-            if (error) {
+            if (error || !newConv) {
+                console.warn('Error creando conversacion:', error);
                 return;
             }
 
@@ -164,7 +166,7 @@ const AlertDetail = () => {
                     )}
                 </div>
 
-                {user && !isOwnAlert && (
+                {user && !isOwnAlert && alert.user_id && (
                     <button
                         style={styles.contactBtn}
                         onClick={handleContact}
@@ -177,6 +179,11 @@ const AlertDetail = () => {
                         )}
                         {contacting ? 'Conectando...' : 'Contactar a quien reporto'}
                     </button>
+                )}
+                {user && !isOwnAlert && !alert.user_id && (
+                    <div style={styles.noOwnerNote}>
+                        Esta alerta no tiene usuario registrado
+                    </div>
                 )}
 
                 {!user && (
@@ -283,6 +290,15 @@ const styles = {
         fontSize: '0.9rem',
         backgroundColor: 'var(--color-surface)',
         borderRadius: '12px',
+    },
+    noOwnerNote: {
+        textAlign: 'center',
+        padding: '1rem',
+        color: '#888',
+        fontSize: '0.9rem',
+        backgroundColor: '#f5f5f5',
+        borderRadius: '12px',
+        border: '1px dashed #ddd',
     },
 };
 
