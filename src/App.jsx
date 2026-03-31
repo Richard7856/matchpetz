@@ -67,6 +67,7 @@ function AppRoutes() {
             <Route path="/adoption" element={<ProtectedRoute><Adoption /></ProtectedRoute>} />
             <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
             <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
+            <Route path="/chat" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
             <Route path="/map" element={<ProtectedRoute><MapScreen /></ProtectedRoute>} />
             <Route path="/map/new" element={<ProtectedRoute><CreatePlace /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

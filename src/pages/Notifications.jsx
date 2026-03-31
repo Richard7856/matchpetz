@@ -67,7 +67,7 @@ const Notifications = () => {
                 break;
             case 'message':
                 if (notif.entity_id) navigate(`/chat/${notif.entity_id}`);
-                else navigate('/chat');
+                else navigate('/inbox');
                 break;
             case 'adoption':
                 // entity_id = conversation UUID (set when chat was created)
@@ -114,11 +114,11 @@ const Notifications = () => {
                         supabase.from('notifications').update({ entity_id: conv.id }).eq('id', notif.id);
                         navigate(`/chat/${conv.id}`);
                     } else {
-                        navigate('/chat');
+                        navigate('/inbox');
                     }
                 } else {
                     // Sin info suficiente — ir al inbox
-                    navigate('/chat');
+                    navigate('/inbox');
                 }
                 break;
             default:
