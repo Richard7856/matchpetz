@@ -169,4 +169,13 @@ Incluidas en `/public` para cumplimiento de tiendas:
 
 ---
 
+## Disponibilidad
+
+| Plataforma | Estado |
+|------------|--------|
+| 🤖 **Google Play Store** | ✅ Disponible — [Descargar para Android](https://play.google.com/store/apps/details?id=com.matchpetz.app) |
+| 🍎 **App Store (iOS)** | 🔄 En revisión por Apple |
+
+---
+
 *Desarrollado con ❤️ para la comunidad de dueños de mascotas.*
