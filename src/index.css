@@ -152,6 +152,15 @@ button:active {
   filter: brightness(0.95);
 }
 
+/* ── FAB (Floating Action Button) — overrides base button padding/size ── */
+/* Needed because base button has padding:1em which squishes icons in small circles */
+button[style*="border-radius: 50%"],
+button[style*="borderRadius: '50%'"] {
+  padding: 0;
+  min-height: auto;
+  width: auto;
+}
+
 /* ── Links & interactive touch targets ── */
 a {
   min-height: 44px;

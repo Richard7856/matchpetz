@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -31,6 +34,28 @@ const Login = () => {
             setForgotLoading(false);
         }
     };
+
+    // Initialize Google Sign-In once on mount so it's ready before the user taps the button
+    useEffect(() => {
+        if (window.Capacitor?.isNativePlatform?.()) {
+            GoogleAuth.initialize({
+                clientId: import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID,
+                scopes: ['profile', 'email'],
+            });
+        }
+    }, []);
+
+    // Fallback redirect: if auth state changes while on login (e.g. after Google sign-in
+    // completes and onAuthStateChange fires), redirect based on profile existence.
+    const { user: authUser } = useAuth();
+    useEffect(() => {
+        if (!authUser) return;
+        supabase.from('profiles').select('id').eq('id', authUser.id).maybeSingle()
+            .then(({ data: profile }) => {
+                navigate(profile ? '/home' : '/complete-profile', { replace: true });
+            })
+            .catch(() => navigate('/home', { replace: true }));
+    }, [authUser, navigate]);
 
     // On mount: check if user is already logged in — redirect if so.
     // This handles the case where a logged-in user navigates to /login.
@@ -68,20 +93,96 @@ const Login = () => {
     }, [navigate]);
 
     const handleGoogle = async () => {
-        const url = import.meta.env.VITE_SUPABASE_URL;
-        if (!url) {
-            setError('Supabase no esta configurado. Revisa .env.local (VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY).');
-            return;
-        }
         try {
             setLoading(true);
             setError('');
-            await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: `${window.location.origin}/` },
-            });
+
+            const isNative = window.Capacitor?.isNativePlatform?.();
+
+            if (isNative) {
+                // Native Google Sign-In — shows Google account picker inside the app
+                // Returns an idToken which Supabase exchanges for a session directly
+                const googleUser = await GoogleAuth.signIn();
+                const idToken = googleUser?.authentication?.idToken;
+                if (!idToken) throw new Error('No se obtuvo el token de Google.');
+
+                const { data, error: err } = await supabase.auth.signInWithIdToken({
+                    provider: 'google',
+                    token: idToken,
+                });
+                if (err) throw err;
+                if (data?.user) {
+                    const { data: profile } = await supabase
+                        .from('profiles').select('id').eq('id', data.user.id).maybeSingle();
+                    navigate(profile ? '/home' : '/complete-profile', { replace: true });
+                }
+            } else {
+                // Web fallback — opens OAuth in browser
+                await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: `${window.location.origin}/` },
+                });
+            }
         } catch (err) {
-            setError('Error al conectar con Google. Revisa la consola.');
+            // GoogleAuth.signIn() throws if user cancels — don't show error in that case
+            if (err?.message?.includes('cancelled') || err?.message?.includes('canceled') || err?.message?.includes('12501')) return;
+            setError('Error al conectar con Google. Intenta de nuevo.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleApple = async () => {
+        // Apple Sign In — only available on iOS native and Safari on macOS
+        // Apple requires nonce for security — Supabase handles the PKCE flow
+        try {
+            setLoading(true);
+            setError('');
+
+            const options = {
+                clientId: import.meta.env.VITE_APPLE_CLIENT_ID || 'com.matchpetz.app',
+                redirectURI: import.meta.env.VITE_APPLE_REDIRECT_URI || `${window.location.origin}/`,
+                scopes: 'email name',
+                state: Math.random().toString(36).substring(2),
+            };
+
+            const result = await SignInWithApple.authorize(options);
+
+            if (!result?.response?.identityToken) {
+                throw new Error('No se obtuvo el token de Apple.');
+            }
+
+            const { data, error: err } = await supabase.auth.signInWithIdToken({
+                provider: 'apple',
+                token: result.response.identityToken,
+            });
+
+            if (err) throw err;
+
+            if (data?.user) {
+                // Apple only provides name on first sign-in — save it if present
+                const fullName = result.response.givenName
+                    ? `${result.response.givenName} ${result.response.familyName || ''}`.trim()
+                    : null;
+
+                const { data: profile } = await supabase
+                    .from('profiles').select('id').eq('id', data.user.id).maybeSingle();
+
+                // If new user and Apple gave us a name, pre-fill display_name
+                if (!profile && fullName) {
+                    await supabase.from('profiles').insert({
+                        id: data.user.id,
+                        display_name: fullName,
+                    }).select().maybeSingle();
+                }
+
+                navigate(profile ? '/home' : '/complete-profile', { replace: true });
+            }
+        } catch (err) {
+            // User cancelled Apple Sign-In — don't show error
+            if (err?.message?.includes('cancel') || err?.message?.includes('Cancel') || err?.code === 'ERR_CANCELED') return;
+            setError('Error al conectar con Apple. Intenta de nuevo.');
+            console.warn('Apple Sign-In error:', err);
         } finally {
             setLoading(false);
         }
@@ -101,12 +202,23 @@ const Login = () => {
             setLoading(true);
             setError('');
             if (mode === 'register') {
-                const { error: err } = await supabase.auth.signUp({
+                const { data, error: err } = await supabase.auth.signUp({
                     email: email.trim(),
                     password,
                     options: { emailRedirectTo: `${window.location.origin}/` },
                 });
                 if (err) throw err;
+                // When email confirmation is disabled in Supabase, signUp returns a session immediately.
+                // When enabled, session is null and user must verify email before logging in.
+                if (data?.session) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('id')
+                        .eq('id', data.user.id)
+                        .maybeSingle();
+                    navigate(profile ? '/home' : '/complete-profile', { replace: true });
+                    return;
+                }
                 setError('Revisa tu correo y haz clic en el enlace para activar tu cuenta.');
             } else {
                 const { data, error: err } = await supabase.auth.signInWithPassword({
@@ -170,6 +282,19 @@ const Login = () => {
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     {loading ? 'Cargando...' : 'Continuar con Google'}
+                </button>
+
+                {/* Apple Sign In — obligatorio por App Store cuando hay Google Sign-In */}
+                <button
+                    type="button"
+                    style={styles.appleBtn}
+                    onClick={handleApple}
+                    disabled={loading}
+                >
+                    <svg width="18" height="22" viewBox="0 0 814 1000" fill="currentColor">
+                        <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105-37.5-155.5-127.5c-42.8-72.5-64.5-188.6-64.5-251.4 0-199.3 109-343.6 291.3-343.6 73.3 0 134.2 48.8 178.6 48.8 42.8 0 110.1-51.6 191.1-51.6 31.3 0 152.1 3.2 218.2 113.6zM537.6 76.1c33.7-40.8 58.4-97.4 58.4-153.9 0-7.7-.6-15.4-1.9-21.8-55.7 2.1-120.9 37.5-160.4 84.4-30.7 35.3-60.1 91.9-60.1 149.2 0 8.3 1.3 16.7 1.9 19.2 3.2.6 8.3 1.3 13.5 1.3 49.7 0 112.5-33.1 148.6-78.4z"/>
+                    </svg>
+                    {loading ? 'Cargando...' : 'Continuar con Apple'}
                 </button>
 
                 <div style={styles.divider}>
@@ -320,6 +445,22 @@ const styles = {
         cursor: 'pointer',
         marginBottom: '1.25rem',
         boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+    },
+    appleBtn: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        width: '100%',
+        padding: '0.9rem 1rem',
+        borderRadius: '12px',
+        border: 'none',
+        backgroundColor: '#000',
+        color: '#fff',
+        fontSize: '0.95rem',
+        fontWeight: '600',
+        cursor: 'pointer',
+        marginBottom: '1.25rem',
     },
     divider: { display: 'flex', alignItems: 'center', marginBottom: '1.25rem' },
     dividerLine: { flex: 1, height: 1, backgroundColor: '#e5e7eb' },

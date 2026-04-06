@@ -4,6 +4,25 @@ import { Camera, MapPin, User, Phone, FileText } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
 import logoImg from '/logo.png';
+import { compressImage } from '../utils/compressImage';
+
+const LOCATIONS = {
+    'México': [
+        'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche',
+        'Chiapas', 'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima',
+        'Durango', 'Estado de México', 'Guanajuato', 'Guerrero', 'Hidalgo',
+        'Jalisco', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca',
+        'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa',
+        'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz',
+        'Yucatán', 'Zacatecas',
+    ],
+    'España': [
+        'Andalucía', 'Aragón', 'Asturias', 'Baleares', 'Canarias', 'Cantabria',
+        'Castilla-La Mancha', 'Castilla y León', 'Cataluña', 'Ceuta',
+        'Comunidad de Madrid', 'Comunidad Valenciana', 'Extremadura', 'Galicia',
+        'La Rioja', 'Melilla', 'Murcia', 'Navarra', 'País Vasco',
+    ],
+};
 
 const CompleteProfile = () => {
     const navigate = useNavigate();
@@ -30,9 +49,10 @@ const CompleteProfile = () => {
         const file = e.target.files?.[0];
         if (!file || !user) return;
         setUploading(true);
-        const ext = file.name.split('.').pop();
-        const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-        const { error } = await supabase.storage.from('matchpet-images').upload(path, file, { upsert: true });
+        // Compress avatar to 400px max — profile photos don't need to be large
+        const compressed = await compressImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.85 });
+        const path = `${user.id}/avatar-${Date.now()}.jpg`;
+        const { error } = await supabase.storage.from('matchpet-images').upload(path, compressed, { upsert: true });
         if (!error) {
             const { data: urlData } = supabase.storage.from('matchpet-images').getPublicUrl(path);
             setAvatarUrl(urlData.publicUrl);
@@ -43,22 +63,52 @@ const CompleteProfile = () => {
     const handleSaveProfile = async (e) => {
         e.preventDefault();
         if (!user) return;
+        // Skip saving if required fields are empty — just go to home
+        if (!name.trim() || !location.trim()) {
+            navigate('/home');
+            return;
+        }
         try {
             setLoading(true);
-            await supabase.from('profiles').upsert({
-                id: user.id,
+
+            // Note: only include columns that exist in the profiles table.
+            // 'bio' is not yet in the schema — omit it to avoid cache errors.
+            const profileData = {
                 display_name: name,
                 location,
-                phone: phone || null,
-                bio: bio || null,
+                // phone column not in schema yet — omit to avoid cache error
                 email: user.email,
                 avatar_url: avatarUrl,
-                stats: { pets: 0, friends: 0, impacts: 0 },
                 updated_at: new Date().toISOString(),
-            }, { onConflict: 'id' });
+            };
+
+            // Check if the profile row already exists to decide insert vs update.
+            // Using upsert caused silent failures when the RLS UPDATE policy was missing.
+            const { data: existing } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            let saveError;
+            if (existing) {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update(profileData)
+                    .eq('id', user.id);
+                saveError = error;
+            } else {
+                const { error } = await supabase
+                    .from('profiles')
+                    .insert({ id: user.id, ...profileData });
+                saveError = error;
+            }
+
+            if (saveError) throw saveError;
             navigate('/home');
         } catch (error) {
-            alert('Error al guardar tu perfil. Intentalo de nuevo.');
+            // Show the real error so it's easier to debug in production
+            alert('Error al guardar tu perfil: ' + (error?.message || 'Intentalo de nuevo.'));
         } finally {
             setLoading(false);
         }
@@ -74,6 +124,13 @@ const CompleteProfile = () => {
 
     return (
         <div style={styles.container} className="fade-in">
+            <button
+                type="button"
+                style={styles.skipBtn}
+                onClick={() => navigate('/home')}
+            >
+                Omitir
+            </button>
             <div style={styles.header}>
                 <img src={logoImg} alt="MatchPetz" style={styles.logo} />
                 <h2 style={styles.title}>Completa tu Perfil</h2>
@@ -111,8 +168,22 @@ const CompleteProfile = () => {
                     </div>
 
                     <div style={styles.inputGroup}>
-                        <label style={styles.label}><MapPin size={15} /> Ciudad / Zona *</label>
-                        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej. Ciudad de Mexico" style={styles.input} required />
+                        <label style={styles.label}><MapPin size={15} /> Estado / Región *</label>
+                        <select
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            style={{ ...styles.input, color: location ? '#111' : '#aaa' }}
+                            required
+                        >
+                            <option value="" disabled>Selecciona tu estado o región</option>
+                            {Object.entries(LOCATIONS).map(([country, states]) => (
+                                <optgroup key={country} label={`— ${country} —`}>
+                                    {states.map(s => (
+                                        <option key={s} value={s}>{s}</option>
+                                    ))}
+                                </optgroup>
+                            ))}
+                        </select>
                     </div>
 
                     <div style={styles.inputGroup}>
@@ -131,7 +202,7 @@ const CompleteProfile = () => {
                     <span style={styles.infoText}>Puedes completar tu perfil despues desde la seccion de Perfil. Los campos marcados con * son obligatorios.</span>
                 </div>
 
-                <button type="submit" style={styles.submitBtn} disabled={loading || !name || !location}>
+                <button type="submit" style={styles.submitBtn} disabled={loading}>
                     {loading ? 'Guardando...' : 'Comenzar a explorar'}
                 </button>
             </form>
@@ -141,11 +212,28 @@ const CompleteProfile = () => {
 
 const styles = {
     container: {
-        minHeight: '100vh',
+        height: '100%',
+        overflowY: 'auto',
         backgroundColor: '#fff',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        position: 'relative',
+    },
+    skipBtn: {
+        position: 'absolute',
+        top: '1rem',
+        right: '1rem',
+        background: 'none',
+        border: 'none',
+        color: 'var(--color-text-light)',
+        fontSize: '0.9rem',
+        fontWeight: '600',
+        cursor: 'pointer',
+        padding: '0.4rem 0.75rem',
+        width: 'auto',
+        minHeight: 'auto',
+        boxShadow: 'none',
     },
     header: {
         textAlign: 'center',
@@ -175,7 +263,7 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
-        padding: '0 1.5rem 2rem',
+        padding: '0 1.5rem 3.5rem',
         width: '100%',
         maxWidth: '480px',
         flex: 1,

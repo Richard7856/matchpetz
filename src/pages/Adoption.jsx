@@ -97,7 +97,7 @@ const Adoption = () => {
                     return;
                 }
             } catch (err) {
-                console.warn('Adoption contact error:', err);
+                alert('No se pudo iniciar el chat. Intenta de nuevo.');
             } finally {
                 setContactingId(null);
             }
@@ -372,15 +372,16 @@ const styles = {
     cardsArea: {
         flex: 1,
         position: 'relative',
-        padding: '0 1rem',
+        padding: '0 0.75rem',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        alignItems: 'stretch',
+        justifyContent: 'center',
+        minHeight: 0,   // allows flex child to shrink below content size
     },
     card: {
         width: '100%',
         height: '100%',
-        maxHeight: '600px',
+        maxHeight: 'none',
         borderRadius: '24px',
         backgroundColor: '#fff',
         boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
@@ -475,7 +476,8 @@ const styles = {
         justifyContent: 'center',
         alignItems: 'center',
         gap: '1.5rem',
-        padding: '1.5rem 0 2rem 0',
+        padding: '0.85rem 0 1rem 0',
+        flexShrink: 0,
     },
     actionBtn: {
         width: '65px',

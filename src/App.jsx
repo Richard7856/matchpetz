@@ -54,6 +54,8 @@ const CreateActivity = lazy(() => import('./pages/CreateActivity'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const CreatePost = lazy(() => import('./pages/CreatePost'));
 const Settings = lazy(() => import('./pages/Settings'));
+const PetMatch = lazy(() => import('./pages/PetMatch'));
+const EditPet = lazy(() => import('./pages/EditPet'));
 
 const PATHS_WITHOUT_NAV = ['/', '/login', '/complete-profile'];
 
@@ -80,6 +82,7 @@ function AppRoutes() {
             <Route path="/alerts/new" element={<CreateAlert />} />
             <Route path="/alerts/:id" element={<AlertDetail />} />
             <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
+            <Route path="/match" element={<ProtectedRoute><PetMatch /></ProtectedRoute>} />
             <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
             <Route path="/services/new" element={<ProtectedRoute><AddService /></ProtectedRoute>} />
             <Route path="/services/:id" element={<ProtectedRoute><ServiceDetail /></ProtectedRoute>} />
@@ -94,6 +97,7 @@ function AppRoutes() {
             <Route path="/courses/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
             <Route path="/pets/new" element={<ProtectedRoute><AddPet /></ProtectedRoute>} />
             <Route path="/pets/:id" element={<ProtectedRoute><PetProfile /></ProtectedRoute>} />
+            <Route path="/pets/:id/edit" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
             <Route path="/users/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
             <Route path="/appointments" element={<ProtectedRoute><MyAppointments /></ProtectedRoute>} />

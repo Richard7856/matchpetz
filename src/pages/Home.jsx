@@ -74,7 +74,7 @@ const Home = () => {
                         title: notifTitle,
                         body: ev.title,
                         entity_id: ev.id,
-                    });
+                    }).catch(() => { /* notificacion no critica, ignorar fallo */ });
                     sendPush(ev.creator_id, notifTitle, ev.title, { type: 'event', entity_id: ev.id });
                 }
             }

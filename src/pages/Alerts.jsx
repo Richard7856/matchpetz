@@ -213,6 +213,8 @@ const styles = {
         borderRadius: '50%',
         backgroundColor: 'var(--color-primary)',
         border: 'none',
+        padding: 0,
+        minHeight: 'auto',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

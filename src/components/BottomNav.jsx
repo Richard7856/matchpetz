@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Compass, MessageSquare, User } from 'lucide-react';
+import { Home, Compass, PawPrint, MessageSquare, User } from 'lucide-react';
 import useIsMobile from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabase';
 
 const NAV_ITEMS = [
-    { path: '/home', icon: Home, label: 'Inicio' },
-    { path: '/discover', icon: Compass, label: 'Descubrir' },
-    { path: '/inbox', icon: MessageSquare, label: 'Chats' },
-    { path: '/profile', icon: User, label: 'Perfil' },
+    { path: '/home',     icon: Home,        label: 'Inicio' },
+    { path: '/discover', icon: Compass,     label: 'Descubrir' },
+    { path: '/match',    icon: PawPrint,    label: 'Match' },
+    { path: '/inbox',    icon: MessageSquare, label: 'Chats' },
+    { path: '/profile',  icon: User,        label: 'Perfil' },
 ];
 
 const BottomNav = () => {

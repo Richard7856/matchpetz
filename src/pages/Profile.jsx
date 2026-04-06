@@ -45,7 +45,7 @@ const Profile = () => {
         const load = async () => {
             try {
                 const [profileRes, petsRes, rolesRes, personalPetsRes, adoptionConvsRes, postsRes, likesRes, storiesRes, followersRes, followingRes, savedRes] = await Promise.all([
-                    supabase.from('profiles').select('id, display_name, email, avatar_url, stats, instagram, facebook, twitter, tiktok, location').eq('id', user.id).single(),
+                    supabase.from('profiles').select('id, display_name, email, avatar_url, stats, instagram, facebook, twitter, tiktok, location').eq('id', user.id).maybeSingle(),
                     supabase.from('adoption_pets').select('id, name, type, image_url, status').eq('user_id', user.id).order('created_at', { ascending: false }),
                     supabase.from('business_roles').select('id, role_type, business_name, status, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
                     supabase.from('pets').select('id, name, species, breed, image_url').eq('owner_id', user.id).order('created_at', { ascending: false }),
@@ -391,7 +391,7 @@ const st = {
     gridStat: { display: 'flex', alignItems: 'center', gap: '3px' },
     gridStatText: { fontSize: '0.7rem', fontWeight: '700', color: '#fff' },
     lockBadge: { position: 'absolute', top: '6px', right: '6px', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-    fab: { position: 'fixed', bottom: '5.5rem', right: '1.25rem', width: '52px', height: '52px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(238,157,43,0.4)', cursor: 'pointer', zIndex: 4 },
+    fab: { position: 'fixed', bottom: '5.5rem', right: '1.25rem', width: '52px', height: '52px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', border: 'none', padding: 0, minHeight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(238,157,43,0.4)', cursor: 'pointer', zIndex: 4 },
     listPad: { padding: '1rem' },
     sectionTitle: { fontSize: '1rem', fontWeight: '700', color: 'var(--color-text-dark)', marginBottom: '0.75rem' },
     listItem: { display: 'flex', alignItems: 'center', backgroundColor: '#fff', padding: '0.85rem', borderRadius: '14px', marginBottom: '0.6rem', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', cursor: 'pointer', gap: '0.75rem' },
