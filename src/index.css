@@ -95,15 +95,13 @@ body {
   /* Bottom safe area handled by BottomNav */
 }
 
-/* Tablet layout — iPad Air, iPad Pro, etc.
-   Keep the app in a phone-sized column centered on screen.
-   This looks intentional and polished rather than stretched. */
-@media (min-width: 768px) {
+/* Tablet (iPad) — bottom nav, centered column */
+@media (min-width: 768px) and (max-width: 1023px) {
   body {
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    background-color: var(--color-bg-soft);
+    background-color: #e8eaed;
     min-height: 100vh;
   }
 
@@ -113,22 +111,25 @@ body {
     height: 100vh;
     height: 100dvh;
     max-height: 100dvh;
-    box-shadow: 0 0 40px rgba(0,0,0,0.12);
-    border-radius: 0;
+    box-shadow: 0 0 48px rgba(0,0,0,0.15);
     overflow: hidden;
     padding: 0;
   }
 }
 
-/* Large tablet / desktop — wider column */
+/* Desktop (1024px+) — sidebar nav */
 @media (min-width: 1024px) {
+  body {
+    display: block;
+    background-color: var(--color-bg-soft);
+  }
+
   #root {
-    max-width: 680px;
-    border-radius: 20px;
-    margin: 1rem auto;
-    height: calc(100vh - 2rem);
-    height: calc(100dvh - 2rem);
-    max-height: calc(100dvh - 2rem);
+    max-width: 100%;
+    height: 100vh;
+    max-height: none;
+    box-shadow: none;
+    padding: 0;
   }
 }
 
