@@ -56,6 +56,7 @@ const CreatePost = lazy(() => import('./pages/CreatePost'));
 const Settings = lazy(() => import('./pages/Settings'));
 const PetMatch = lazy(() => import('./pages/PetMatch'));
 const EditPet = lazy(() => import('./pages/EditPet'));
+const DeleteAccount = lazy(() => import('./pages/DeleteAccount'));
 
 const PATHS_WITHOUT_NAV = ['/', '/login', '/complete-profile'];
 
@@ -106,6 +107,7 @@ function AppRoutes() {
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/posts/new" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/eliminar-cuenta" element={<ProtectedRoute><DeleteAccount /></ProtectedRoute>} />
         </Routes>
     );
 }

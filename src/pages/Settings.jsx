@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, Lock, Trash2, Info, ChevronRight, FileText, Shield } from 'lucide-react';
+import { ArrowLeft, Bell, Lock, Trash2, Info, ChevronRight, FileText, Shield, LogOut } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -21,6 +21,11 @@ const Settings = () => {
         const newVal = !notifs[key];
         setNotifs(prev => ({ ...prev, [key]: newVal }));
         localStorage.setItem(`matchpetz_notif_${key}`, String(newVal));
+    };
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        navigate('/login', { replace: true });
     };
 
     const handleChangePassword = async () => {
@@ -80,10 +85,14 @@ const Settings = () => {
                             {resetMsg}
                         </p>
                     )}
-                    <a href="/delete-account.html" target="_blank" rel="noopener noreferrer" style={styles.menuItem}>
+                    <button style={styles.menuItem} onClick={handleLogout}>
+                        <span style={{ color: '#e53935' }}>Cerrar sesion</span>
+                        <LogOut size={18} color="#e53935" />
+                    </button>
+                    <button style={styles.menuItem} onClick={() => navigate('/eliminar-cuenta')}>
                         <span style={{ color: '#e53935' }}>Eliminar cuenta</span>
                         <Trash2 size={18} color="#e53935" />
-                    </a>
+                    </button>
                 </div>
 
                 {/* Informacion */}
@@ -91,7 +100,7 @@ const Settings = () => {
                     <h3 style={styles.sectionTitle}><Info size={18} /> Informacion</h3>
                     <div style={styles.menuItem}>
                         <span>Version de la app</span>
-                        <span style={{ color: 'var(--color-text-light)', fontSize: '0.9rem' }}>1.0.0</span>
+                        <span style={{ color: 'var(--color-text-light)', fontSize: '0.9rem' }}>1.0.3</span>
                     </div>
                     <a href="/legal.html#terminos" target="_blank" rel="noopener noreferrer" style={styles.menuItem}>
                         <span>Terminos y Condiciones</span>
