@@ -9,6 +9,42 @@
     <meta property="og:description" content="Adopta, socializa, encuentra servicios y conecta con otros amantes de las mascotas.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:image" content="https://matchpetz.com/feature-graphic.png">
+    <meta property="og:url" content="https://matchpetz.com">
+
+    <!-- ============================================================
+         ANALYTICS — Agrega tus IDs cuando crees las cuentas
+         1. GA4:        analytics.google.com → Admin → Create Property (Web)
+         2. Google Ads: ads.google.com → Linked to GA4
+         3. Meta Pixel: business.facebook.com → Events Manager → Connect Data Sources → Web
+         ============================================================ -->
+
+    <!-- Google Analytics 4 — descomenta y reemplaza G-XXXXXXXXXX con tu Measurement ID -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    -->
+
+    <!-- Meta Pixel — descomenta y reemplaza TU_PIXEL_ID con tu Pixel ID -->
+    <!--
+    <script>
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+      document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', 'TU_PIXEL_ID');
+      fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1"/></noscript>
+    -->
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -593,9 +629,17 @@
             Adopta, socializa, encuentra veterinarios, reporta mascotas perdidas y compra productos — todo conectado con la comunidad pet lover más grande.
         </p>
         <div class="hero-actions">
-            <a href="#unete" class="btn btn-primary btn-large">Unirme gratis</a>
-            <a href="#features" class="btn btn-outline btn-large">Ver funciones</a>
+            <a href="https://play.google.com/store/apps/details?id=com.matchpetz.app"
+               target="_blank" rel="noopener"
+               class="btn btn-primary btn-large"
+               onclick="trackDownload('google_play')">
+                ▶ Descargar en Google Play
+            </a>
+            <a href="#unete" class="btn btn-outline btn-large">Acceso anticipado</a>
         </div>
+        <p style="font-size:0.82rem; color:rgba(255,255,255,0.55); margin-top:0.5rem;">
+            📱 Android disponible · 🍎 iOS próximamente
+        </p>
 
         <div class="hero-stats">
             <div class="hero-stat">
@@ -856,23 +900,71 @@
 
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-    // Waitlist form
-    document.getElementById('waitlist-form').addEventListener('submit', function(e) {
+    // ── Supabase config (anon key es pública — igual que en la app) ──
+    const SUPABASE_URL = 'https://yilqentsmibgnzphztxc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpbHFlbnRzbWliZ256cGh6dHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTk4OTMsImV4cCI6MjA4ODIzNTg5M30.uCuNnotRMnvm9xM1uCtJERtP2EGCNHrfprjQF6wc_nY';
+
+    // ── Capturar UTM params del URL al cargar la página ──
+    // Ej: matchpetz.com?utm_source=facebook&utm_medium=cpc&utm_campaign=launch
+    const _urlParams = new URLSearchParams(window.location.search);
+    const _utm = {
+        source:   _urlParams.get('utm_source'),
+        medium:   _urlParams.get('utm_medium'),
+        campaign: _urlParams.get('utm_campaign'),
+    };
+
+    // ── Tracking helper — funciona cuando GA4/Meta Pixel estén activos ──
+    function trackEvent(name, params) {
+        if (typeof gtag !== 'undefined') gtag('event', name, params);
+        if (typeof fbq !== 'undefined' && name === 'waitlist_signup') fbq('track', 'Lead');
+        if (typeof fbq !== 'undefined' && name === 'app_download') fbq('track', 'InitiateCheckout');
+    }
+
+    function trackDownload(store) {
+        trackEvent('app_download', { store, utm_source: _utm.source });
+    }
+
+    // ── Waitlist form → guarda en Supabase ──
+    document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const email = document.getElementById('email-input').value;
+        const email = document.getElementById('email-input').value.trim().toLowerCase();
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Guardando...';
 
-        // Save to localStorage as simple waitlist
-        const waitlist = JSON.parse(localStorage.getItem('matchpet_waitlist') || '[]');
-        waitlist.push({ email, date: new Date().toISOString() });
-        localStorage.setItem('matchpet_waitlist', JSON.stringify(waitlist));
+        try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Prefer': 'return=minimal',
+                },
+                body: JSON.stringify({
+                    email,
+                    utm_source:   _utm.source,
+                    utm_medium:   _utm.medium,
+                    utm_campaign: _utm.campaign,
+                }),
+            });
 
-        // Show success
-        this.style.display = 'none';
-        document.getElementById('form-success').style.display = 'block';
-
-        // Track conversion (placeholder for analytics)
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'waitlist_signup', { email_domain: email.split('@')[1] });
+            if (res.ok || res.status === 409) {
+                // 409 = email duplicado — igual mostramos éxito (ya están registrados)
+                this.style.display = 'none';
+                document.getElementById('form-success').style.display = 'block';
+                trackEvent('waitlist_signup', { utm_source: _utm.source, utm_campaign: _utm.campaign });
+            } else {
+                throw new Error(`HTTP ${res.status}`);
+            }
+        } catch (err) {
+            // Fallback a localStorage si la red falla
+            const waitlist = JSON.parse(localStorage.getItem('matchpet_waitlist') || '[]');
+            waitlist.push({ email, date: new Date().toISOString(), utm: _utm });
+            localStorage.setItem('matchpet_waitlist', JSON.stringify(waitlist));
+            this.style.display = 'none';
+            document.getElementById('form-success').style.display = 'block';
+            console.warn('Waitlist guardado en localStorage (fallback):', err.message);
         }
     });
 
