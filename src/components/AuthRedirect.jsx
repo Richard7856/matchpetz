@@ -41,11 +41,18 @@ export default function AuthRedirect() {
             }
         };
 
-        // Listen for auth events — handles OAuth redirects where the hash
-        // is processed asynchronously after getSession resolves.
+        // Listen for auth events — handles OAuth redirects and password recovery.
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 if (cancelled) return;
+
+                // User clicked the password reset link in their email.
+                // Supabase fires this event instead of SIGNED_IN for recovery tokens.
+                if (event === 'PASSWORD_RECOVERY') {
+                    resolve('reset-password');
+                    return;
+                }
+
                 if (event === 'SIGNED_IN' && session?.user) {
                     try {
                         const { data: profile } = await supabase
@@ -82,5 +89,6 @@ export default function AuthRedirect() {
     }
     if (status === 'home') return <Navigate to="/home" replace />;
     if (status === 'complete-profile') return <Navigate to="/complete-profile" replace />;
+    if (status === 'reset-password') return <Navigate to="/reset-password" replace />;
     return <Navigate to="/login" replace />;
 }

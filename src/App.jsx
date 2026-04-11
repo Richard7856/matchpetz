@@ -57,6 +57,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const PetMatch = lazy(() => import('./pages/PetMatch'));
 const EditPet = lazy(() => import('./pages/EditPet'));
 const DeleteAccount = lazy(() => import('./pages/DeleteAccount'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
 const PATHS_WITHOUT_NAV = ['/', '/login', '/complete-profile'];
 
@@ -108,6 +109,8 @@ function AppRoutes() {
             <Route path="/posts/new" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/eliminar-cuenta" element={<ProtectedRoute><DeleteAccount /></ProtectedRoute>} />
+            {/* Public — Supabase recovery token establishes the session, no ProtectedRoute needed */}
+            <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
     );
 }
