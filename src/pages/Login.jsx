@@ -16,25 +16,6 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [showForgot, setShowForgot] = useState(false);
-    const [forgotEmail, setForgotEmail] = useState('');
-    const [forgotMsg, setForgotMsg] = useState('');
-    const [forgotLoading, setForgotLoading] = useState(false);
-
-    const handleForgotPassword = async () => {
-        if (!forgotEmail.trim()) { setForgotMsg('Ingresa tu correo electronico.'); return; }
-        setForgotLoading(true);
-        setForgotMsg('');
-        try {
-            const { error: err } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), { redirectTo: window.location.origin + '/' });
-            if (err) throw err;
-            setForgotMsg('Revisa tu correo para restablecer tu contrasena');
-        } catch (err) {
-            setForgotMsg(err.message || 'Error al enviar el correo.');
-        } finally {
-            setForgotLoading(false);
-        }
-    };
 
     // Initialize Google Sign-In once on mount so it's ready before the user taps the button
     useEffect(() => {
@@ -125,9 +106,11 @@ const Login = () => {
                 });
             }
         } catch (err) {
-            // GoogleAuth.signIn() throws if user cancels — don't show error in that case
+            // Log the full error so we can diagnose — remove once fixed
+            console.error('Google Sign-In error:', JSON.stringify(err), err?.message, err?.code);
             if (err?.message?.includes('cancelled') || err?.message?.includes('canceled') || err?.message?.includes('12501')) return;
-            setError('Error al conectar con Google. Intenta de nuevo.');
+            // Show the real error message temporarily for debugging
+            setError(`Google error: ${err?.message || err?.code || JSON.stringify(err)}`);
         } finally {
             setLoading(false);
         }
@@ -340,38 +323,16 @@ const Login = () => {
                     </button>
                 </form>
 
-                {mode === 'login' && !showForgot && (
-                    <button type="button" style={styles.forgotBtn} onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotMsg(''); }}>
-                        Olvidaste tu contrasena?
+                {mode === 'login' && (
+                    <button type="button" style={styles.forgotBtn} onClick={() => navigate('/forgot-password')}>
+                        ¿Olvidaste tu contraseña?
                     </button>
-                )}
-
-                {showForgot && (
-                    <div style={{ marginBottom: '1rem' }}>
-                        <div style={styles.inputWrap}>
-                            <Mail size={20} color="#9e9e9e" style={styles.inputIcon} />
-                            <input
-                                type="email"
-                                placeholder="Correo electronico"
-                                value={forgotEmail}
-                                onChange={(e) => setForgotEmail(e.target.value)}
-                                style={styles.input}
-                            />
-                        </div>
-                        {forgotMsg && <div style={{ ...styles.errorBox, marginTop: '0.75rem', marginBottom: 0, backgroundColor: forgotMsg.includes('Revisa') ? '#ecfdf5' : '#fef2f2', color: forgotMsg.includes('Revisa') ? '#065f46' : '#b91c1c' }}>{forgotMsg}</div>}
-                        <button type="button" style={{ ...styles.submitBtn, marginTop: '0.75rem' }} onClick={handleForgotPassword} disabled={forgotLoading}>
-                            {forgotLoading ? 'Enviando...' : 'Enviar enlace'}
-                        </button>
-                        <button type="button" style={{ ...styles.forgotBtn, marginTop: '0.5rem' }} onClick={() => { setShowForgot(false); setForgotMsg(''); }}>
-                            Volver al inicio de sesion
-                        </button>
-                    </div>
                 )}
 
                 <button
                     type="button"
                     style={styles.toggleMode}
-                    onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setShowForgot(false); setForgotMsg(''); }}
+                    onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
                 >
                     {mode === 'login'
                         ? 'No tienes cuenta? Registrate'
@@ -391,12 +352,13 @@ const Login = () => {
 
 const styles = {
     container: {
-        padding: '1.5rem',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
-        justifyContent: 'center',
+        minHeight: '100dvh',
+        overflowY: 'auto',          // scroll when keyboard pushes content up
         alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1.5rem',
         backgroundColor: '#f0f2f5',
     },
     card: {
@@ -406,6 +368,8 @@ const styles = {
         backgroundColor: '#fff',
         borderRadius: '20px',
         boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+        marginTop: 'auto',
+        marginBottom: 'auto',
     },
     header: { textAlign: 'center', marginBottom: '1.75rem' },
     title: {
