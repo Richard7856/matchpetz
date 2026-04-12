@@ -19,26 +19,18 @@ const DeleteAccount = () => {
         setStep('deleting');
 
         try {
-            // Delete user data in order (child rows first, then parent)
-            const uid = user.id;
+            // Calls a SECURITY DEFINER PostgreSQL function that:
+            // 1. Deletes all user data (pets, posts, messages, etc.)
+            // 2. Deletes the auth.users record — permanent, cannot sign in again
+            const { error: rpcError } = await supabase.rpc('delete_own_account');
+            if (rpcError) throw rpcError;
 
-            await supabase.from('pet_swipes').delete().or(`swiper_pet_id.in.(select id from pets where owner_id.eq.${uid}),target_pet_id.in.(select id from pets where owner_id.eq.${uid})`);
-            await supabase.from('pet_matches').delete().or(`pet1_id.in.(select id from pets where owner_id.eq.${uid}),pet2_id.in.(select id from pets where owner_id.eq.${uid})`);
-            await supabase.from('pets').delete().eq('owner_id', uid);
-            await supabase.from('messages').delete().eq('sender_id', uid);
-            await supabase.from('notifications').delete().eq('user_id', uid);
-            await supabase.from('posts').delete().eq('user_id', uid);
-            await supabase.from('adoption_pets').delete().eq('user_id', uid);
-            await supabase.from('marketplace_products').delete().eq('user_id', uid);
-            await supabase.from('profiles').delete().eq('id', uid);
-
-            // Sign out — the auth user record requires a server-side call or edge function
-            // For now we sign out and show confirmation. Full auth deletion via support email.
+            // Sign out locally to clear the session
             await supabase.auth.signOut();
             setStep('done');
         } catch (err) {
             console.error('DeleteAccount error:', err);
-            setErrorMsg('Ocurrió un error. Por favor intenta de nuevo o escríbenos a soporte@matchpetz.com');
+            setErrorMsg('Ocurrió un error al eliminar tu cuenta. Por favor intenta de nuevo.');
             setStep('error');
         }
     };
