@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 
@@ -37,7 +38,7 @@ const Login = () => {
 
     // Initialize Google Sign-In once on mount so it's ready before the user taps the button
     useEffect(() => {
-        if (window.Capacitor?.isNativePlatform?.()) {
+        if (Capacitor.isNativePlatform()) {
             GoogleAuth.initialize({
                 clientId: import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID,
                 scopes: ['profile', 'email'],
@@ -97,7 +98,7 @@ const Login = () => {
             setLoading(true);
             setError('');
 
-            const isNative = window.Capacitor?.isNativePlatform?.();
+            const isNative = Capacitor.isNativePlatform();
 
             if (isNative) {
                 // Native Google Sign-In — shows Google account picker inside the app
