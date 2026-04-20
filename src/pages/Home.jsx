@@ -125,22 +125,22 @@ const Home = () => {
     const KPI_ITEMS = [
         {
             key: 'adoption', label: 'En adopción', value: kpis.adoption,
-            icon: <Heart size={20} color="#e8567a" fill="#e8567a" />,
+            icon: <Heart size={16} color="#e8567a" fill="#e8567a" />,
             bg: '#fdf2f8', color: '#e8567a', path: '/adoption',
         },
         {
             key: 'likes', label: 'Likes recibidos', value: kpis.likes,
-            icon: <PawPrint size={20} color="#ee9d2b" fill="#ee9d2b" />,
+            icon: <PawPrint size={16} color="#ee9d2b" fill="#ee9d2b" />,
             bg: '#fffbeb', color: '#ee9d2b', path: '/match',
         },
         {
             key: 'followers', label: 'Seguidores', value: kpis.followers,
-            icon: <Users size={20} color="#6366f1" />,
+            icon: <Users size={16} color="#6366f1" />,
             bg: '#eef2ff', color: '#6366f1', path: '/profile',
         },
         {
             key: 'alerts', label: 'Alertas activas', value: kpis.alerts,
-            icon: <AlertTriangle size={20} color="#ef4444" />,
+            icon: <AlertTriangle size={16} color="#ef4444" />,
             bg: '#fff1f2', color: '#ef4444', path: '/alerts',
         },
     ];
@@ -152,21 +152,20 @@ const Home = () => {
     // ── Render ───────────────────────────────────────────────────────────────
     const heroCards = (
         <div style={styles.heroRow}>
+            {/* minWidth:0 en heroText es crítico — sin él flex no encoge el texto */}
             <div style={styles.heroCardMatch} onClick={() => navigate('/match')}>
                 <div style={styles.heroEmoji}>🐾</div>
-                <div style={styles.heroText}>
+                <div style={{ ...styles.heroText, minWidth: 0 }}>
                     <span style={styles.heroTitle}>{matchText.title}</span>
-                    <span style={styles.heroSub}>{matchText.sub}</span>
                 </div>
-                <ChevronRight size={16} color="rgba(255,255,255,0.8)" />
+                <ChevronRight size={16} color="rgba(255,255,255,0.8)" style={{ flexShrink: 0 }} />
             </div>
             <div style={styles.heroCardAdopt} onClick={() => navigate('/adoption')}>
                 <div style={styles.heroEmoji}>🏠</div>
-                <div style={styles.heroText}>
+                <div style={{ ...styles.heroText, minWidth: 0 }}>
                     <span style={styles.heroTitle}>{adoptText.title}</span>
-                    <span style={styles.heroSub}>{adoptText.sub}</span>
                 </div>
-                <ChevronRight size={16} color="rgba(255,255,255,0.8)" />
+                <ChevronRight size={16} color="rgba(255,255,255,0.8)" style={{ flexShrink: 0 }} />
             </div>
         </div>
     );
@@ -178,10 +177,13 @@ const Home = () => {
                     <div style={{ ...styles.kpiIconWrap, backgroundColor: bg }}>
                         {icon}
                     </div>
-                    <span style={{ ...styles.kpiValue, color }}>
-                        {kpisLoading ? '—' : value}
-                    </span>
-                    <span style={styles.kpiLabel}>{label}</span>
+                    {/* Número + label apilados a la derecha del icono */}
+                    <div style={styles.kpiTextCol}>
+                        <span style={{ ...styles.kpiValue, color }}>
+                            {kpisLoading ? '—' : value}
+                        </span>
+                        <span style={styles.kpiLabel}>{label}</span>
+                    </div>
                 </div>
             ))}
         </div>
@@ -191,7 +193,7 @@ const Home = () => {
         <>
             <StoriesRow />
 
-            {/* Saludo personalizado */}
+            {/* Saludo personalizado — todo en una línea */}
             <div style={styles.greeting}>
                 <span style={styles.greetingText}>Hola, {firstName} 👋</span>
                 <span style={styles.greetingSub}>¿Qué hacemos hoy?</span>
@@ -320,56 +322,70 @@ const styles = {
         padding: '0 3px',
         border: '2px solid var(--color-bg-soft, #f5f5f5)',
     },
-    // ── Greeting ──
+    // ── Greeting — una sola línea: "Hola, Richard 👋  ¿Qué hacemos hoy?" ──
     greeting: {
         display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        marginBottom: '1rem',
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: '0.45rem',
+        marginBottom: '0.85rem',
+        flexWrap: 'wrap',        // por si el nombre es muy largo en pantallas pequeñas
     },
     greetingText: {
-        fontSize: '1.25rem',
+        fontSize: '1.1rem',
         fontWeight: 800,
         color: 'var(--color-text-dark)',
+        lineHeight: 1.2,
     },
     greetingSub: {
         fontSize: '0.85rem',
         color: 'var(--color-text-light)',
+        fontWeight: 500,
     },
-    // ── KPI grid 2×2 ──
+    // ── KPI grid 2×2 — layout horizontal compacto: icono | número + label ──
     kpiGrid: {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '0.65rem',
-        marginBottom: '1rem',
+        gap: '0.5rem',
+        marginBottom: '0.85rem',
     },
     kpiCard: {
         backgroundColor: '#fff',
-        borderRadius: 18,
-        padding: '1rem 0.9rem',
+        borderRadius: 14,
+        padding: '0.6rem 0.75rem',
         display: 'flex',
-        flexDirection: 'column',
-        gap: 4,
+        flexDirection: 'row',   // icono a la izquierda, texto a la derecha
+        alignItems: 'center',
+        gap: '0.55rem',
         cursor: 'pointer',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
     },
     kpiIconWrap: {
-        width: 36, height: 36,
-        borderRadius: 10,
+        width: 30, height: 30,
+        borderRadius: 8,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 2,
+        flexShrink: 0,
+    },
+    kpiTextCol: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        minWidth: 0,
     },
     kpiValue: {
-        fontSize: '1.6rem',
+        fontSize: '1.15rem',
         fontWeight: 900,
         lineHeight: 1,
     },
     kpiLabel: {
-        fontSize: '0.75rem',
+        fontSize: '0.68rem',
         fontWeight: 500,
         color: 'var(--color-text-light)',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
     },
     // ── Hero cards — compactas para no dominar la pantalla ──
     heroRow: {
@@ -402,9 +418,15 @@ const styles = {
         minHeight: 58,
     },
     heroEmoji: { fontSize: '1.3rem', flexShrink: 0 },
-    heroText: { flex: 1, display: 'flex', flexDirection: 'column', gap: 1 },
-    heroTitle: { color: '#fff', fontWeight: 800, fontSize: '0.85rem' },
-    heroSub:   { color: 'rgba(255,255,255,0.82)', fontSize: '0.68rem', fontWeight: 500 },
+    heroText: { flex: 1, display: 'flex', flexDirection: 'column' },
+    // Título único (sin sub) — wrapping permitido para textos más largos
+    heroTitle: {
+        color: '#fff',
+        fontWeight: 800,
+        fontSize: '0.9rem',
+        lineHeight: 1.25,
+        wordBreak: 'break-word',
+    },
     // ── Quick actions ──
     quickActions: {
         display: 'flex',
