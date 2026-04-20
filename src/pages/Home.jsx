@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, ShoppingBag, Calendar, CheckCircle, AlertTriangle, Plus, CalendarCheck, MapPin, Filter, Users } from 'lucide-react';
+import { Heart, ShoppingBag, Calendar, CheckCircle, AlertTriangle, Plus, CalendarCheck, MapPin, Filter, Users, PawPrint, ChevronRight } from 'lucide-react';
 import useIsMobile from '../hooks/useIsMobile';
 import { supabase } from '../supabase';
 import { getAvatarUrl } from '../utils/avatar';
@@ -94,11 +94,12 @@ const Home = () => {
         });
     }, [events, tab]);
 
+    // Secondary quick actions — Adoption + Match are now hero cards above
     const ACTION_ITEMS = [
-        { path: '/adoption', bg: '#ffeaba', icon: <Heart size={28} color="var(--color-primary)" fill="var(--color-primary)" />, label: 'Adopcion' },
-        { path: '/alerts', bg: '#ffebee', icon: <AlertTriangle size={28} color="#e53935" />, label: 'Alertas' },
-        { path: '/marketplace', bg: '#e8f5e9', icon: <ShoppingBag size={28} color="#4caf50" />, label: 'Tienda' },
-        { path: '/appointments', bg: '#e3f2fd', icon: <CalendarCheck size={28} color="#2196f3" />, label: 'Citas' },
+        { path: '/alerts',       bg: '#ffebee', icon: <AlertTriangle size={24} color="#e53935" />,                                label: 'Alertas' },
+        { path: '/marketplace',  bg: '#e8f5e9', icon: <ShoppingBag size={24} color="#4caf50" />,                                  label: 'Tienda' },
+        { path: '/appointments', bg: '#e3f2fd', icon: <CalendarCheck size={24} color="#2196f3" />,                                label: 'Citas' },
+        { path: '/map',          bg: '#f3e5f5', icon: <MapPin size={24} color="#9c27b0" />,                                       label: 'Mapa' },
     ];
 
     const TABS = [
@@ -167,6 +168,30 @@ const Home = () => {
             {isMobile ? (
                 <>
                     <StoriesRow />
+
+                    {/* ── Hero features: Match + Adopción ── */}
+                    <div style={styles.heroRow}>
+                        {/* Match / Buscar pareja */}
+                        <div style={styles.heroCardMatch} onClick={() => navigate('/match')}>
+                            <div style={styles.heroEmoji}>🐾</div>
+                            <div style={styles.heroText}>
+                                <span style={styles.heroTitle}>Buscar pareja</span>
+                                <span style={styles.heroSub}>Encuentra el match ideal</span>
+                            </div>
+                            <ChevronRight size={18} color="rgba(255,255,255,0.8)" />
+                        </div>
+
+                        {/* Adopción */}
+                        <div style={styles.heroCardAdopt} onClick={() => navigate('/adoption')}>
+                            <div style={styles.heroEmoji}>🏠</div>
+                            <div style={styles.heroText}>
+                                <span style={styles.heroTitle}>Adoptar</span>
+                                <span style={styles.heroSub}>Dale un hogar a alguien</span>
+                            </div>
+                            <ChevronRight size={18} color="rgba(255,255,255,0.8)" />
+                        </div>
+                    </div>
+
                     <div style={styles.quickActions}>
                         {ACTION_ITEMS.map(({ path, bg, icon, label }) => (
                             <div key={path} style={styles.actionItem} onClick={() => navigate(path)}>
@@ -290,13 +315,67 @@ const styles = {
         fontWeight: 'var(--font-weight-bold)',
         color: 'var(--color-text-dark)',
     },
+    // ── Hero cards (Match + Adopción) ──
+    heroRow: {
+        display: 'flex',
+        gap: '0.75rem',
+        marginBottom: '1rem',
+    },
+    heroCardMatch: {
+        flex: 1,
+        background: 'linear-gradient(135deg, #ee9d2b 0%, #ffb703 100%)',
+        borderRadius: 20,
+        padding: '1rem 0.9rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.6rem',
+        cursor: 'pointer',
+        boxShadow: '0 6px 20px rgba(238,157,43,0.35)',
+        transition: 'transform 0.15s',
+        minHeight: 72,
+    },
+    heroCardAdopt: {
+        flex: 1,
+        background: 'linear-gradient(135deg, #e8567a 0%, #f472b6 100%)',
+        borderRadius: 20,
+        padding: '1rem 0.9rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.6rem',
+        cursor: 'pointer',
+        boxShadow: '0 6px 20px rgba(232,86,122,0.3)',
+        transition: 'transform 0.15s',
+        minHeight: 72,
+    },
+    heroEmoji: {
+        fontSize: '1.6rem',
+        flexShrink: 0,
+    },
+    heroText: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+    },
+    heroTitle: {
+        color: '#fff',
+        fontWeight: 800,
+        fontSize: '0.95rem',
+        lineHeight: 1.2,
+    },
+    heroSub: {
+        color: 'rgba(255,255,255,0.82)',
+        fontSize: '0.72rem',
+        fontWeight: 500,
+    },
+    // ── Quick actions (secondary) ──
     quickActions: {
         flexShrink: 0,
         display: 'flex',
-        justifyContent: 'center',
-        gap: '1.5rem',
+        justifyContent: 'space-around',
+        gap: '0.5rem',
         backgroundColor: 'var(--color-surface)',
-        padding: '1rem 0.75rem',
+        padding: '0.85rem 0.5rem',
         borderRadius: '20px',
         boxShadow: 'var(--shadow-neu)',
         marginBottom: '1rem',
@@ -309,9 +388,9 @@ const styles = {
         cursor: 'pointer',
     },
     actionIcon: {
-        width: '52px',
-        height: '52px',
-        borderRadius: '16px',
+        width: '44px',
+        height: '44px',
+        borderRadius: '14px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

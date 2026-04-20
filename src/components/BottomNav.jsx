@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Compass, PawPrint, MessageSquare, User } from 'lucide-react';
+import { Home, Heart, PawPrint, MessageSquare, User } from 'lucide-react';
 import useIsMobile from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabase';
 
+// Nav order: Inicio | Adopción | ❤️ Match (center FAB) | Chats | Perfil
+// Adopción replaces Descubrir — is a core feature, not just discovery
+// Match gets the center FAB treatment (orange circle, prominent)
 const NAV_ITEMS = [
-    { path: '/home',     icon: Home,        label: 'Inicio' },
-    { path: '/discover', icon: Compass,     label: 'Descubrir' },
-    { path: '/match',    icon: PawPrint,    label: 'Match' },
-    { path: '/inbox',    icon: MessageSquare, label: 'Chats' },
-    { path: '/profile',  icon: User,        label: 'Perfil' },
+    { path: '/home',      icon: Home,           label: 'Inicio',    isCenter: false },
+    { path: '/adoption',  icon: Heart,          label: 'Adopción',  isCenter: false },
+    { path: '/match',     icon: PawPrint,       label: 'Match',     isCenter: true  }, // FAB center
+    { path: '/inbox',     icon: MessageSquare,  label: 'Chats',     isCenter: false },
+    { path: '/profile',   icon: User,           label: 'Perfil',    isCenter: false },
 ];
 
 const BottomNav = () => {
@@ -35,37 +38,46 @@ const BottomNav = () => {
 
         const channel = supabase
             .channel('bottomnav-unread')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'conversations' },
-                () => { fetchUnread(); }
-            )
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' },
+                () => { fetchUnread(); })
             .subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        return () => { supabase.removeChannel(channel); };
     }, [user]);
 
+    // ── Desktop sidebar ────────────────────────────────────────────────────────
     if (!isMobile) {
         return (
             <div style={styles.sidebar}>
                 <div style={styles.sidebarBrand}>
                     <span style={styles.brandText}>MatchPetz</span>
                 </div>
-                {NAV_ITEMS.map(({ path: itemPath, icon: Icon, label }) => {
+                {NAV_ITEMS.map(({ path: itemPath, icon: Icon, label, isCenter }) => {
                     const isActive = path === itemPath;
                     return (
                         <button
                             key={itemPath}
-                            style={{ ...styles.sidebarItem, ...(isActive ? styles.sidebarItemActive : {}) }}
+                            style={{
+                                ...styles.sidebarItem,
+                                ...(isActive ? styles.sidebarItemActive : {}),
+                                ...(isCenter ? styles.sidebarItemCenter : {}),
+                            }}
                             onClick={() => navigate(itemPath)}
                         >
                             <div style={styles.iconWrap}>
-                                <Icon size={22} color={isActive ? 'var(--color-primary)' : 'var(--color-text-light)'} />
-                                {itemPath === '/inbox' && unreadChats > 0 && <span style={styles.badge}>{unreadChats > 9 ? '9+' : unreadChats}</span>}
+                                <Icon
+                                    size={22}
+                                    color={isCenter ? '#fff' : isActive ? 'var(--color-primary)' : 'var(--color-text-light)'}
+                                    fill={isCenter && itemPath === '/match' ? '#fff' : 'none'}
+                                />
+                                {itemPath === '/inbox' && unreadChats > 0 &&
+                                    <span style={styles.badge}>{unreadChats > 9 ? '9+' : unreadChats}</span>}
                             </div>
-                            <span style={{ ...styles.sidebarLabel, color: isActive ? 'var(--color-primary)' : 'var(--color-text-light)' }}>
+                            <span style={{
+                                ...styles.sidebarLabel,
+                                color: isCenter ? '#fff' : isActive ? 'var(--color-primary)' : 'var(--color-text-light)',
+                                fontWeight: isCenter ? '700' : '600',
+                            }}>
                                 {label}
                             </span>
                         </button>
@@ -75,19 +87,49 @@ const BottomNav = () => {
         );
     }
 
+    // ── Mobile bottom nav ──────────────────────────────────────────────────────
     return (
         <div style={styles.navBar}>
-            {NAV_ITEMS.map(({ path: itemPath, icon: Icon, label }) => {
+            {NAV_ITEMS.map(({ path: itemPath, icon: Icon, label, isCenter }) => {
                 const isActive = path === itemPath;
                 const color = isActive ? 'var(--color-primary)' : 'var(--color-text-light)';
+
+                if (isCenter) {
+                    // FAB-style center button — orange circle, floats slightly above nav
+                    return (
+                        <button key={itemPath} style={styles.fabWrap} onClick={() => navigate(itemPath)}>
+                            <div style={{
+                                ...styles.fab,
+                                ...(isActive ? styles.fabActive : {}),
+                            }}>
+                                <Icon size={26} color="#fff" fill="#fff" />
+                            </div>
+                            <span style={{
+                                ...styles.fabLabel,
+                                color: isActive ? 'var(--color-primary)' : 'var(--color-text-light)',
+                                fontWeight: isActive ? '700' : '600',
+                            }}>
+                                {label}
+                            </span>
+                        </button>
+                    );
+                }
+
                 return (
                     <button key={itemPath} style={styles.navItem} onClick={() => navigate(itemPath)}>
                         {isActive && <div style={styles.activeIndicator} />}
                         <div style={styles.iconWrap}>
-                            <Icon size={22} color={color} />
-                            {itemPath === '/inbox' && unreadChats > 0 && <span style={styles.badge}>{unreadChats > 9 ? '9+' : unreadChats}</span>}
+                            <Icon
+                                size={22}
+                                color={color}
+                                fill={itemPath === '/adoption' && isActive ? 'var(--color-primary)' : 'none'}
+                            />
+                            {itemPath === '/inbox' && unreadChats > 0 &&
+                                <span style={styles.badge}>{unreadChats > 9 ? '9+' : unreadChats}</span>}
                         </div>
-                        <span style={{ ...styles.navLabel, color, fontWeight: isActive ? '700' : '600' }}>{label}</span>
+                        <span style={{ ...styles.navLabel, color, fontWeight: isActive ? '700' : '600' }}>
+                            {label}
+                        </span>
                     </button>
                 );
             })}
@@ -96,15 +138,15 @@ const BottomNav = () => {
 };
 
 const styles = {
-    // Mobile bottom nav
+    // ── Mobile ──
     navBar: {
         width: '100%',
         flexShrink: 0,
         display: 'flex',
         justifyContent: 'space-around',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         backgroundColor: 'var(--color-background, #fdfdfd)',
-        padding: '0.5rem 0 calc(0.6rem + env(safe-area-inset-bottom, 0px))',
+        padding: '0 0 calc(0.5rem + env(safe-area-inset-bottom, 0px))',
         borderTop: 'none',
         boxShadow: '0 -6px 16px rgba(0,0,0,0.06), 0 -2px 6px rgba(255,255,255,0.4)',
         zIndex: 100,
@@ -118,8 +160,8 @@ const styles = {
         justifyContent: 'center',
         gap: '2px',
         cursor: 'pointer',
-        padding: '0.25rem 0.5rem',
-        width: 'auto',
+        padding: '0.5rem 0.5rem 0.25rem',
+        minWidth: 56,
         minHeight: '48px',
         position: 'relative',
     },
@@ -130,6 +172,41 @@ const styles = {
         height: '3px',
         borderRadius: '0 0 3px 3px',
         backgroundColor: 'var(--color-primary)',
+    },
+    // FAB center button
+    fabWrap: {
+        background: 'none',
+        border: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: '3px',
+        cursor: 'pointer',
+        padding: '0 0.5rem 0.25rem',
+        minWidth: 64,
+        position: 'relative',
+        marginTop: '-14px',     // float above the nav bar
+    },
+    fab: {
+        width: 54,
+        height: 54,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #ee9d2b, #ffb703)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 16px rgba(238,157,43,0.5)',
+        transition: 'transform 0.15s, box-shadow 0.15s',
+    },
+    fabActive: {
+        background: 'linear-gradient(135deg, #d4891f, #ee9d2b)',
+        boxShadow: '0 6px 20px rgba(238,157,43,0.65)',
+        transform: 'scale(1.05)',
+    },
+    fabLabel: {
+        fontSize: '0.7rem',
+        marginTop: '1px',
     },
     iconWrap: {
         position: 'relative',
@@ -157,9 +234,9 @@ const styles = {
     },
     navLabel: {
         fontSize: '0.7rem',
-        fontWeight: '600',
     },
-    // Desktop sidebar
+
+    // ── Desktop sidebar ──
     sidebar: {
         width: '220px',
         height: '100vh',
@@ -199,6 +276,11 @@ const styles = {
     },
     sidebarItemActive: {
         backgroundColor: '#fff8ee',
+    },
+    sidebarItemCenter: {
+        background: 'linear-gradient(135deg, #ee9d2b, #ffb703)',
+        borderRadius: '14px',
+        margin: '0.5rem 0.75rem',
     },
     sidebarLabel: {
         fontSize: '0.95rem',
