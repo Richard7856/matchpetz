@@ -2,47 +2,49 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     MessageCircle, UserPlus, UserCheck, MapPin,
-    Calendar, ShoppingBag, Grid3x3, ChevronRight,
+    Calendar, Grid3x3, ChevronRight, Heart as HeartLucide,
 } from 'lucide-react';
-import { Heart, PawPrint, StorefrontIcon, Storefront } from '@phosphor-icons/react';
+import { PawPrint, Storefront } from '@phosphor-icons/react';
 import { supabase } from '../supabase';
 import { getAvatarUrl } from '../utils/avatar';
 import { useAuth } from '../contexts/AuthContext';
 import AppBar from '../components/AppBar';
 import { ROLE_CONFIG } from '../constants/roles';
 import SocialLinks from '../components/SocialLinks';
-import ReviewSection from '../components/ReviewSection';
 import LoadingState from '../components/LoadingState';
 import { formatEventDate } from '../utils/formatters';
 
 /**
- * UserProfile — vista del perfil de otro usuario.
- * Rediseño: header Instagram + tabs Posts / Mascotas / Eventos / Tienda.
+ * UserProfile — perfil de otro usuario.
+ * Header limpio con avatar + info, stats, botones compactos,
+ * tabs: Posts · Mascotas · Adopción · Eventos · Tienda.
+ * Sin reseñas — la interacción es a través de posts y chat.
  */
 const UserProfile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user, profile: authProfile } = useAuth();
 
-    const [profile, setProfile] = useState(null);
-    const [pets, setPets] = useState([]);
-    const [roles, setRoles] = useState([]);
-    const [posts, setPosts] = useState([]);
-    const [events, setEvents] = useState([]);
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [profile, setProfile]         = useState(null);
+    const [pets, setPets]               = useState([]);
+    const [adoptionPets, setAdoptionPets] = useState([]);
+    const [roles, setRoles]             = useState([]);
+    const [posts, setPosts]             = useState([]);
+    const [events, setEvents]           = useState([]);
+    const [products, setProducts]       = useState([]);
+    const [loading, setLoading]         = useState(true);
     const [isFollowing, setIsFollowing] = useState(false);
-    const [followerCount, setFollowerCount] = useState(0);
+    const [followerCount, setFollowerCount]   = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
-    const [followLoading, setFollowLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('posts');
+    const [followLoading, setFollowLoading]   = useState(false);
+    const [activeTab, setActiveTab]     = useState('posts');
 
     useEffect(() => {
         const load = async () => {
             const [
                 profileRes, petsRes, rolesRes,
                 followersRes, followingRes,
-                postsRes, eventsRes, productsRes,
+                postsRes, eventsRes, productsRes, adoptionRes,
             ] = await Promise.all([
                 supabase.from('profiles').select('*').eq('id', id).single(),
                 supabase.from('pets').select('id, name, species, breed, gender, image_url, images').eq('owner_id', id).limit(12),
@@ -52,6 +54,7 @@ const UserProfile = () => {
                 supabase.from('posts').select('id, image_url, caption, created_at').eq('user_id', id).order('created_at', { ascending: false }).limit(30),
                 supabase.from('events').select('id, title, event_date, image_url, location').eq('creator_id', id).order('event_date', { ascending: false }).limit(10),
                 supabase.from('marketplace_products').select('id, title, price, images').eq('seller_id', id).eq('is_active', true).limit(12),
+                supabase.from('adoption_pets').select('id, name, age, type, breed, image_url, images, location').eq('user_id', id).eq('status', 'disponible').limit(10),
             ]);
 
             setProfile(profileRes.data);
@@ -62,6 +65,7 @@ const UserProfile = () => {
             setPosts(postsRes.data || []);
             setEvents(eventsRes.data || []);
             setProducts(productsRes.data || []);
+            setAdoptionPets(adoptionRes.data || []);
 
             if (user) {
                 const { data: followRow } = await supabase
@@ -113,87 +117,72 @@ const UserProfile = () => {
     if (!profile) return <div style={s.loading}>Perfil no encontrado</div>;
 
     const isSelf = user?.id === id;
-    const hasStore = products.length > 0;
 
-    // Tabs dinámicos: siempre Posts y Mascotas, condicional Eventos y Tienda
     const TABS = [
-        { key: 'posts',    label: 'Posts',    icon: <Grid3x3 size={16} /> },
-        { key: 'mascotas', label: 'Mascotas', icon: <PawPrint size={16} weight="fill" /> },
-        ...(events.length > 0   ? [{ key: 'eventos', label: 'Eventos', icon: <Calendar size={16} /> }] : []),
-        ...(hasStore             ? [{ key: 'tienda',  label: 'Tienda',  icon: <Storefront size={16} weight="fill" /> }] : []),
+        { key: 'posts',    label: 'Posts',     icon: <Grid3x3 size={14} /> },
+        { key: 'mascotas', label: 'Mascotas',  icon: <PawPrint size={14} weight="fill" /> },
+        ...(adoptionPets.length > 0 ? [{ key: 'adopcion', label: 'Adopción', icon: <HeartLucide size={14} /> }] : []),
+        ...(events.length > 0       ? [{ key: 'eventos',  label: 'Eventos',  icon: <Calendar size={14} /> }] : []),
+        ...(products.length > 0     ? [{ key: 'tienda',   label: 'Tienda',   icon: <Storefront size={14} weight="fill" /> }] : []),
     ];
-
-    // ── Header gradient — usa colores de la marca ──────────────────────────
-    const bannerGradient = profile.cover_url
-        ? `url(${profile.cover_url})`
-        : 'linear-gradient(135deg, #ee9d2b 0%, #f472b6 60%, #a855f7 100%)';
 
     return (
         <div style={s.container} className="fade-in">
             <AppBar title={profile.display_name || 'Perfil'} />
 
-            {/* ── Banner + avatar ── */}
-            <div style={{ ...s.banner, background: bannerGradient }} />
+            {/* ── Header card: avatar + info + stats + botones ── */}
+            <div style={s.headerCard}>
 
-            <div style={s.avatarWrap}>
-                <div style={s.avatarRing}>
-                    <img src={getAvatarUrl(profile.avatar_url, profile.id)} alt="" style={s.avatar} />
-                </div>
-            </div>
-
-            <div style={s.content}>
-                {/* ── Info principal ── */}
-                <div style={s.nameBlock}>
-                    <h2 style={s.userName}>{profile.display_name || 'Usuario'}</h2>
-                    {profile.location && (
-                        <div style={s.locationRow}>
-                            <MapPin size={13} color="#9ca3af" />
-                            <span style={s.locationText}>{profile.location}</span>
-                        </div>
-                    )}
-                    {profile.bio && <p style={s.bio}>{profile.bio}</p>}
-
-                    {/* Roles de negocio como badges */}
-                    {roles.length > 0 && (
-                        <div style={s.roleBadges}>
-                            {roles.map(r => {
-                                const cfg = ROLE_CONFIG[r.role_type] || {};
-                                return (
-                                    <span key={r.id} style={{ ...s.roleBadge, backgroundColor: cfg.color + '22', color: cfg.color || '#666' }}>
-                                        {cfg.label || r.role_type}
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    )}
+                {/* Avatar + nombre lado a lado */}
+                <div style={s.avatarRow}>
+                    <div style={s.avatarRing}>
+                        <img src={getAvatarUrl(profile.avatar_url, profile.id)} alt="" style={s.avatar} />
+                    </div>
+                    <div style={s.nameBlock}>
+                        <h2 style={s.userName}>{profile.display_name || 'Usuario'}</h2>
+                        {profile.location && (
+                            <div style={s.locationRow}>
+                                <MapPin size={12} color="#9ca3af" />
+                                <span style={s.locationText}>{profile.location}</span>
+                            </div>
+                        )}
+                        {/* Roles como badges pequeños */}
+                        {roles.length > 0 && (
+                            <div style={s.roleBadges}>
+                                {roles.map(r => {
+                                    const cfg = ROLE_CONFIG[r.role_type] || {};
+                                    return (
+                                        <span key={r.id} style={{ ...s.roleBadge, backgroundColor: (cfg.color || '#888') + '22', color: cfg.color || '#666' }}>
+                                            {cfg.label || r.role_type}
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* ── Stats ── */}
+                {profile.bio && <p style={s.bio}>{profile.bio}</p>}
+
+                {/* Stats inline */}
                 <div style={s.statsRow}>
-                    <div style={s.statBox}>
-                        <span style={s.statValue}>{posts.length}</span>
-                        <span style={s.statLabel}>Posts</span>
-                    </div>
-                    <div style={s.statDivider} />
-                    <div style={s.statBox}>
-                        <span style={s.statValue}>{followerCount}</span>
-                        <span style={s.statLabel}>Seguidores</span>
-                    </div>
-                    <div style={s.statDivider} />
-                    <div style={s.statBox}>
-                        <span style={s.statValue}>{followingCount}</span>
-                        <span style={s.statLabel}>Siguiendo</span>
-                    </div>
-                    {pets.length > 0 && <>
-                        <div style={s.statDivider} />
-                        <div style={s.statBox}>
-                            <span style={s.statValue}>{pets.length}</span>
-                            <span style={s.statLabel}>Mascotas</span>
-                        </div>
-                    </>}
+                    {[
+                        { v: posts.length,    l: 'Posts' },
+                        { v: followerCount,   l: 'Seguidores' },
+                        { v: followingCount,  l: 'Siguiendo' },
+                        ...(pets.length > 0 ? [{ v: pets.length, l: 'Mascotas' }] : []),
+                    ].map((item, i, arr) => (
+                        <React.Fragment key={item.l}>
+                            <div style={s.statBox}>
+                                <span style={s.statValue}>{item.v}</span>
+                                <span style={s.statLabel}>{item.l}</span>
+                            </div>
+                            {i < arr.length - 1 && <div style={s.statDivider} />}
+                        </React.Fragment>
+                    ))}
                 </div>
 
-                {/* ── Social links ── */}
+                {/* Redes sociales */}
                 {(profile.instagram || profile.facebook || profile.twitter || profile.tiktok) && (
                     <div style={s.socialWrap}>
                         <SocialLinks
@@ -205,7 +194,7 @@ const UserProfile = () => {
                     </div>
                 )}
 
-                {/* ── Botones de acción ── */}
+                {/* Botones — solo si no es el propio usuario */}
                 {!isSelf && (
                     <div style={s.btnRow}>
                         <button
@@ -214,31 +203,35 @@ const UserProfile = () => {
                             disabled={followLoading}
                         >
                             {isFollowing
-                                ? <><UserCheck size={16} /> Siguiendo</>
-                                : <><UserPlus size={16} /> Seguir</>}
+                                ? <><UserCheck size={15} /> Siguiendo</>
+                                : <><UserPlus size={15} /> Seguir</>}
                         </button>
                         <button style={s.msgBtn} onClick={handleSendMessage}>
-                            <MessageCircle size={16} />
+                            <MessageCircle size={15} />
                             Mensaje
                         </button>
                     </div>
                 )}
+            </div>
 
-                {/* ── Tabs ── */}
-                <div style={s.tabBar}>
-                    {TABS.map(t => (
-                        <button
-                            key={t.key}
-                            style={{ ...s.tab, ...(activeTab === t.key ? s.tabActive : {}) }}
-                            onClick={() => setActiveTab(t.key)}
-                        >
-                            {t.icon}
-                            <span>{t.label}</span>
-                        </button>
-                    ))}
-                </div>
+            {/* ── Tabs ── */}
+            <div style={s.tabBar}>
+                {TABS.map(t => (
+                    <button
+                        key={t.key}
+                        style={{ ...s.tab, ...(activeTab === t.key ? s.tabActive : {}) }}
+                        onClick={() => setActiveTab(t.key)}
+                    >
+                        {t.icon}
+                        <span>{t.label}</span>
+                    </button>
+                ))}
+            </div>
 
-                {/* ── Tab: Posts ── */}
+            {/* ── Contenido del tab activo ── */}
+            <div style={s.tabContent}>
+
+                {/* Posts — grid 3 col tipo Instagram */}
                 {activeTab === 'posts' && (
                     posts.length === 0
                         ? <Empty text="Sin publicaciones aún" />
@@ -252,58 +245,79 @@ const UserProfile = () => {
                         </div>
                 )}
 
-                {/* ── Tab: Mascotas ── */}
+                {/* Mascotas */}
                 {activeTab === 'mascotas' && (
                     pets.length === 0
                         ? <Empty text="Sin mascotas registradas" />
-                        : <div style={s.petGrid}>
+                        : <div style={s.listCol}>
                             {pets.map(pet => {
                                 const img = pet.images?.[0] || pet.image_url || '';
                                 return (
-                                    <div key={pet.id} style={s.petCard} onClick={() => navigate(`/pets/${pet.id}`)}>
-                                        <div style={{ ...s.petImg, backgroundImage: img ? `url(${img})` : 'none' }} />
-                                        <div style={s.petInfo}>
-                                            <span style={s.petName}>{pet.name}</span>
-                                            <span style={s.petBreed}>{pet.breed || pet.species || ''}</span>
-                                            {pet.gender && <span style={s.petGender}>{pet.gender}</span>}
+                                    <div key={pet.id} style={s.listCard} onClick={() => navigate(`/pets/${pet.id}`)}>
+                                        <div style={{ ...s.listThumb, backgroundImage: img ? `url(${img})` : 'none' }} />
+                                        <div style={s.listInfo}>
+                                            <span style={s.listTitle}>{pet.name}</span>
+                                            <span style={s.listSub}>{pet.breed || pet.species || ''}</span>
+                                            {pet.gender && <span style={s.chip}>{pet.gender}</span>}
                                         </div>
-                                        <ChevronRight size={16} color="#ccc" />
+                                        <ChevronRight size={16} color="#d1d5db" />
                                     </div>
                                 );
                             })}
                         </div>
                 )}
 
-                {/* ── Tab: Eventos ── */}
+                {/* Adopción */}
+                {activeTab === 'adopcion' && (
+                    adoptionPets.length === 0
+                        ? <Empty text="Sin mascotas en adopción" />
+                        : <div style={s.adoptGrid}>
+                            {adoptionPets.map(p => {
+                                const img = p.images?.[0] || p.image_url || '';
+                                return (
+                                    <div key={p.id} style={s.adoptCard} onClick={() => navigate(`/adoption/${p.id}`)}>
+                                        <div style={{ ...s.adoptImg, backgroundImage: img ? `url(${img})` : 'none' }} />
+                                        <div style={s.adoptInfo}>
+                                            <span style={s.listTitle}>{p.name}</span>
+                                            <span style={s.listSub}>{p.breed || p.type}</span>
+                                            {p.age && <span style={{ ...s.chip, backgroundColor: '#e8f5e9', color: '#388e3c' }}>{p.age}</span>}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                )}
+
+                {/* Eventos */}
                 {activeTab === 'eventos' && (
                     events.length === 0
                         ? <Empty text="Sin eventos creados" />
-                        : <div style={s.eventList}>
+                        : <div style={s.listCol}>
                             {events.map(ev => (
-                                <div key={ev.id} style={s.eventCard} onClick={() => navigate(`/events/${ev.id}`)}>
-                                    {ev.image_url && (
-                                        <img src={ev.image_url} alt={ev.title} style={s.eventImg} loading="lazy" />
-                                    )}
-                                    <div style={s.eventInfo}>
-                                        <span style={s.eventTitle}>{ev.title}</span>
-                                        <div style={s.eventMeta}>
-                                            <Calendar size={12} color="#9ca3af" />
-                                            <span>{formatEventDate(ev.event_date)}</span>
+                                <div key={ev.id} style={s.listCard} onClick={() => navigate(`/events/${ev.id}`)}>
+                                    {ev.image_url
+                                        ? <img src={ev.image_url} alt={ev.title} style={s.listThumb} loading="lazy" />
+                                        : <div style={{ ...s.listThumb, backgroundColor: '#fff8ee' }} />}
+                                    <div style={s.listInfo}>
+                                        <span style={s.listTitle}>{ev.title}</span>
+                                        <div style={s.metaRow}>
+                                            <Calendar size={11} color="#9ca3af" />
+                                            <span style={s.listSub}>{formatEventDate(ev.event_date)}</span>
                                         </div>
                                         {ev.location && (
-                                            <div style={s.eventMeta}>
-                                                <MapPin size={12} color="#9ca3af" />
-                                                <span>{ev.location}</span>
+                                            <div style={s.metaRow}>
+                                                <MapPin size={11} color="#9ca3af" />
+                                                <span style={s.listSub}>{ev.location}</span>
                                             </div>
                                         )}
                                     </div>
-                                    <ChevronRight size={16} color="#ccc" />
+                                    <ChevronRight size={16} color="#d1d5db" />
                                 </div>
                             ))}
                         </div>
                 )}
 
-                {/* ── Tab: Tienda ── */}
+                {/* Tienda */}
                 {activeTab === 'tienda' && (
                     products.length === 0
                         ? <Empty text="Sin productos disponibles" />
@@ -314,7 +328,7 @@ const UserProfile = () => {
                                     <div key={p.id} style={s.productCard} onClick={() => navigate(`/products/${p.id}`)}>
                                         <div style={{ ...s.productImg, backgroundImage: img ? `url(${img})` : 'none' }} />
                                         <div style={s.productInfo}>
-                                            <span style={s.productName}>{p.title}</span>
+                                            <span style={s.listTitle}>{p.title}</span>
                                             <span style={s.productPrice}>${p.price?.toLocaleString('es-MX')}</span>
                                         </div>
                                     </div>
@@ -322,26 +336,16 @@ const UserProfile = () => {
                             })}
                         </div>
                 )}
-
-                {/* ── Reseñas — siempre al fondo ── */}
-                <div style={{ marginTop: '1.5rem' }}>
-                    <ReviewSection entityType="profile" entityId={id} />
-                </div>
             </div>
         </div>
     );
 };
 
-// Pequeño componente de estado vacío para los tabs
 const Empty = ({ text }) => (
-    <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#9ca3af', fontSize: '0.9rem' }}>
+    <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#9ca3af', fontSize: '0.88rem' }}>
         {text}
     </div>
 );
-
-const BANNER_H = 108;
-const AVATAR_D = 80;
-const AVATAR_OFFSET = AVATAR_D / 2;
 
 const s = {
     container: {
@@ -354,239 +358,212 @@ const s = {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         height: '100%', color: 'var(--color-text-light)',
     },
-    // ── Banner ──
-    banner: {
-        height: BANNER_H,
-        width: '100%',
-        flexShrink: 0,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-    },
-    // ── Avatar flotando sobre el banner ──
-    avatarWrap: {
+
+    // ── Header card blanca: todo el info del usuario ──
+    headerCard: {
+        backgroundColor: '#fff',
+        margin: '0.75rem 0.9rem 0',
+        borderRadius: 20,
+        padding: '1rem',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
         display: 'flex',
-        justifyContent: 'center',
-        marginTop: -(AVATAR_OFFSET),
-        marginBottom: 2,
-        position: 'relative',
-        zIndex: 2,
+        flexDirection: 'column',
+        gap: '0.75rem',
+    },
+
+    // Avatar + nombre lado a lado (como en Comunidad/eventCard)
+    avatarRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.85rem',
     },
     avatarRing: {
-        width: AVATAR_D + 6,
-        height: AVATAR_D + 6,
+        width: 68, height: 68,
         borderRadius: '50%',
         background: 'linear-gradient(135deg, #ee9d2b, #f472b6)',
-        padding: 3,
-        boxShadow: '0 3px 14px rgba(0,0,0,0.12)',
+        padding: 2.5,
+        flexShrink: 0,
+        boxShadow: '0 2px 10px rgba(238,157,43,0.25)',
     },
     avatar: {
         width: '100%', height: '100%',
-        borderRadius: '50%',
-        objectFit: 'cover',
-        border: '2.5px solid #fff',
+        borderRadius: '50%', objectFit: 'cover',
+        border: '2px solid #fff',
     },
-    content: {
-        flex: 1,
-        padding: '0 0.9rem 2rem',
-        display: 'flex',
-        flexDirection: 'column',
-    },
-    // ── Info ──
     nameBlock: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '0.2rem',
-        marginBottom: '0.85rem',
-        textAlign: 'center',
+        flex: 1, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0,
     },
     userName: {
-        fontSize: '1.15rem',
-        fontWeight: 800,
-        color: 'var(--color-text-dark)',
-        margin: 0,
+        fontSize: '1.1rem', fontWeight: 800,
+        color: 'var(--color-text-dark)', margin: 0,
     },
     locationRow: {
         display: 'flex', alignItems: 'center', gap: '0.2rem',
     },
     locationText: {
-        fontSize: '0.78rem',
-        color: '#9ca3af',
-    },
-    bio: {
-        fontSize: '0.83rem',
-        color: 'var(--color-text-light)',
-        lineHeight: 1.45,
-        maxWidth: 300,
-        margin: '0.15rem 0 0',
+        fontSize: '0.78rem', color: '#9ca3af',
     },
     roleBadges: {
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '0.3rem',
-        justifyContent: 'center',
-        marginTop: '0.3rem',
+        display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: 2,
     },
     roleBadge: {
-        fontSize: '0.68rem',
-        fontWeight: 700,
-        padding: '2px 9px',
-        borderRadius: 20,
+        fontSize: '0.65rem', fontWeight: 700,
+        padding: '2px 8px', borderRadius: 20,
     },
-    // ── Stats — compactos, misma card que en el resto ──
+    bio: {
+        fontSize: '0.83rem', color: 'var(--color-text-light)',
+        lineHeight: 1.45, margin: 0,
+    },
+
+    // Stats
     statsRow: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: '0.65rem 0.5rem',
-        marginBottom: '0.65rem',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        display: 'flex', alignItems: 'center',
+        borderTop: '1px solid #f5f5f5',
+        paddingTop: '0.65rem',
     },
     statBox: {
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        flex: 1,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1,
     },
     statValue: {
         fontSize: '1rem', fontWeight: 800,
         color: 'var(--color-text-dark)', lineHeight: 1,
     },
     statLabel: {
-        fontSize: '0.68rem', color: '#9ca3af', marginTop: 2,
+        fontSize: '0.66rem', color: '#9ca3af', marginTop: 2,
     },
     statDivider: {
-        width: 1, height: 22, backgroundColor: '#f0f0f0',
+        width: 1, height: 20, backgroundColor: '#f0f0f0',
     },
-    // ── Social links ──
+
+    // Social
     socialWrap: {
-        display: 'flex',
-        justifyContent: 'center',
-        marginBottom: '0.65rem',
+        display: 'flex', justifyContent: 'flex-start',
     },
-    // ── Botones — pill compactos, mismo estilo que el resto de la app ──
+
+    // Botones — mismo tamaño que los chips de Comunidad
     btnRow: {
-        display: 'flex', gap: '0.4rem',
-        marginBottom: '0.85rem',
-        justifyContent: 'center',
+        display: 'flex', gap: '0.5rem',
     },
     followBtn: {
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
         backgroundColor: 'var(--color-primary)', color: '#fff',
-        border: 'none', padding: '0.5rem 1.25rem', borderRadius: 20,
+        border: 'none', padding: '0.5rem 1.1rem', borderRadius: 20,
         fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-        boxShadow: '0 3px 10px rgba(238,157,43,0.3)',
+        boxShadow: '0 2px 8px rgba(238,157,43,0.3)',
     },
     followingBtn: {
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
-        backgroundColor: '#f5f5f5', color: 'var(--color-text-dark)',
-        border: '1.5px solid #e5e7eb', padding: '0.5rem 1.25rem', borderRadius: 20,
+        backgroundColor: '#f5f5f5', color: '#6b7280',
+        border: '1.5px solid #e5e7eb', padding: '0.5rem 1.1rem', borderRadius: 20,
         fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
     },
+    // Mensaje — gris oscuro para diferenciarlo del follow naranja
     msgBtn: {
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
-        backgroundColor: '#fff', color: 'var(--color-primary)',
-        border: '1.5px solid var(--color-primary)', padding: '0.5rem 1.25rem', borderRadius: 20,
+        backgroundColor: '#1f2937', color: '#fff',
+        border: 'none', padding: '0.5rem 1.1rem', borderRadius: 20,
         fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
     },
-    // ── Tabs — pill style igual que Comunidad ──
+
+    // ── Tab bar — fuera de la card, mismo estilo que Comunidad ──
     tabBar: {
         display: 'flex',
         gap: '0.35rem',
-        marginBottom: '0.85rem',
+        padding: '0.75rem 0.9rem 0',
         overflowX: 'auto',
         scrollbarWidth: 'none',
     },
     tab: {
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
-        padding: '0.42rem 0.9rem',
+        display: 'flex', alignItems: 'center', gap: '0.3rem',
+        padding: '0.42rem 0.85rem',
         borderRadius: 20,
         border: '1.5px solid #e5e7eb',
         background: '#fff',
         fontSize: '0.78rem', fontWeight: 600,
         color: 'var(--color-text-light)',
         cursor: 'pointer', fontFamily: 'inherit',
-        whiteSpace: 'nowrap',
-        flexShrink: 0,
+        whiteSpace: 'nowrap', flexShrink: 0,
     },
     tabActive: {
         backgroundColor: 'var(--color-primary)',
         borderColor: 'var(--color-primary)',
         color: '#fff',
     },
-    // ── Posts grid — 3 columnas tipo Instagram ──
+    tabContent: {
+        padding: '0.75rem 0.9rem 2rem',
+    },
+
+    // ── Posts grid 3 col ──
     postGrid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 2,
-        borderRadius: 14,
-        overflow: 'hidden',
+        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 2, borderRadius: 14, overflow: 'hidden',
     },
     postCell: {
         aspectRatio: '1',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundColor: '#f0f0f0',
-        cursor: 'pointer',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        backgroundColor: '#f0f0f0', cursor: 'pointer',
     },
-    // ── Mascotas grid ──
-    petGrid: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.5rem',
-    },
-    petCard: {
+
+    // ── Lista genérica (mascotas, eventos) ──
+    listCol: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+    listCard: {
         display: 'flex', alignItems: 'center', gap: '0.75rem',
-        backgroundColor: '#fff', padding: '0.65rem 0.85rem',
+        backgroundColor: '#fff', padding: '0.6rem 0.75rem',
         borderRadius: 16, cursor: 'pointer',
         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
     },
-    petImg: {
+    listThumb: {
         width: 52, height: 52, borderRadius: 12,
         backgroundSize: 'cover', backgroundPosition: 'center',
-        backgroundColor: '#f0e6d3', flexShrink: 0,
+        backgroundColor: '#f0f0f0', flexShrink: 0,
+        objectFit: 'cover',
     },
-    petInfo: {
-        flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0,
+    listInfo: {
+        flex: 1, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0,
     },
-    petName: { fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-text-dark)' },
-    petBreed: { fontSize: '0.78rem', color: '#9ca3af' },
-    petGender: {
-        fontSize: '0.68rem', fontWeight: 600,
-        backgroundColor: '#f3f4f6', color: '#6b7280',
-        padding: '1px 7px', borderRadius: 8, alignSelf: 'flex-start',
-    },
-    // ── Eventos list ──
-    eventList: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
-    eventCard: {
-        display: 'flex', alignItems: 'center', gap: '0.75rem',
-        backgroundColor: '#fff', borderRadius: 16,
-        overflow: 'hidden', cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-    },
-    eventImg: {
-        width: 68, height: 68, objectFit: 'cover', flexShrink: 0,
-    },
-    eventInfo: {
-        flex: 1, display: 'flex', flexDirection: 'column', gap: 3,
-        padding: '0.6rem 0', minWidth: 0,
-    },
-    eventTitle: {
+    listTitle: {
         fontSize: '0.9rem', fontWeight: 700,
         color: 'var(--color-text-dark)',
         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
     },
-    eventMeta: {
-        display: 'flex', alignItems: 'center', gap: '0.3rem',
-        fontSize: '0.75rem', color: '#9ca3af',
+    listSub: { fontSize: '0.75rem', color: '#9ca3af' },
+    chip: {
+        fontSize: '0.65rem', fontWeight: 700,
+        backgroundColor: '#f3f4f6', color: '#6b7280',
+        padding: '1px 7px', borderRadius: 8,
+        alignSelf: 'flex-start',
     },
-    // ── Tienda grid ──
+    metaRow: {
+        display: 'flex', alignItems: 'center', gap: '0.25rem',
+    },
+
+    // ── Adopción grid 2 col ──
+    adoptGrid: {
+        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem',
+    },
+    adoptCard: {
+        backgroundColor: '#fff', borderRadius: 16,
+        overflow: 'hidden', cursor: 'pointer',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    },
+    adoptImg: {
+        width: '100%', aspectRatio: '1',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        backgroundColor: '#f5f5f5',
+    },
+    adoptInfo: {
+        padding: '0.5rem 0.65rem 0.65rem',
+        display: 'flex', flexDirection: 'column', gap: 3,
+    },
+
+    // ── Tienda ──
     productGrid: {
         display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem',
     },
     productCard: {
-        backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden',
-        cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        backgroundColor: '#fff', borderRadius: 16,
+        overflow: 'hidden', cursor: 'pointer',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
     },
     productImg: {
         width: '100%', aspectRatio: '1',
@@ -596,10 +573,6 @@ const s = {
     productInfo: {
         padding: '0.5rem 0.65rem 0.65rem',
         display: 'flex', flexDirection: 'column', gap: 2,
-    },
-    productName: {
-        fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-dark)',
-        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
     },
     productPrice: {
         fontSize: '0.88rem', fontWeight: 800, color: 'var(--color-primary)',
