@@ -146,6 +146,10 @@ const s = {
         borderBottom: 'none',
         WebkitOverflowScrolling: 'touch',
         scrollbarWidth: 'none',
+        // Bordes redondeados para que armonice con el resto del diseño
+        borderRadius: 20,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+        marginBottom: '0.85rem',
     },
     storyItem: {
         display: 'flex',

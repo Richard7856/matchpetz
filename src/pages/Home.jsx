@@ -12,9 +12,23 @@ import StoriesRow from '../components/StoriesRow';
 import Onboarding from '../components/Onboarding';
 import logoImg from '/logo.png';
 
+// Texts that rotate each session — keeps the home feeling fresh
+const ADOPT_TEXTS = [
+    { title: 'Tu nueva mascota',          sub: 'Hay alguien esperándote' },
+    { title: 'Tu nuevo integrante',       sub: 'Cambia una vida hoy' },
+    { title: 'Adopta con amor',           sub: 'Dale un hogar a alguien' },
+    { title: 'Un amigo para siempre',     sub: 'Encuentra tu compañero' },
+];
+const MATCH_TEXTS = [
+    { title: 'Buscar pareja',   sub: 'Encuentra el match ideal' },
+    { title: 'Buscar amigo',    sub: 'Socializa con otras mascotas' },
+    { title: 'Hacer amigos',    sub: 'Conoce mascotas cercanas' },
+    { title: 'Nuevo compañero', sub: 'El amor a primera patita' },
+];
+
 /**
  * Home — pantalla principal limpia.
- * Muestra KPIs de actividad de la comunidad + accesos rápidos a las features core.
+ * Hero cards (Match + Adopción) primero → KPIs de actividad → accesos rápidos.
  * Eventos movidos a /comunidad para no saturar esta pantalla.
  */
 const Home = () => {
@@ -25,6 +39,10 @@ const Home = () => {
     const [unreadChats, setUnreadChats] = useState(0);
     const [kpis, setKpis] = useState({ adoption: 0, likes: 0, followers: 0, alerts: 0 });
     const [kpisLoading, setKpisLoading] = useState(true);
+
+    // Pick random texts once per session mount — different each visit without extra state
+    const adoptText = ADOPT_TEXTS[Math.floor(Math.random() * ADOPT_TEXTS.length)];
+    const matchText = MATCH_TEXTS[Math.floor(Math.random() * MATCH_TEXTS.length)];
 
     // ── Unread chat badge para el AppBar ──────────────────────────────────────
     useEffect(() => {
@@ -132,6 +150,43 @@ const Home = () => {
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
+    const heroCards = (
+        <div style={styles.heroRow}>
+            <div style={styles.heroCardMatch} onClick={() => navigate('/match')}>
+                <div style={styles.heroEmoji}>🐾</div>
+                <div style={styles.heroText}>
+                    <span style={styles.heroTitle}>{matchText.title}</span>
+                    <span style={styles.heroSub}>{matchText.sub}</span>
+                </div>
+                <ChevronRight size={16} color="rgba(255,255,255,0.8)" />
+            </div>
+            <div style={styles.heroCardAdopt} onClick={() => navigate('/adoption')}>
+                <div style={styles.heroEmoji}>🏠</div>
+                <div style={styles.heroText}>
+                    <span style={styles.heroTitle}>{adoptText.title}</span>
+                    <span style={styles.heroSub}>{adoptText.sub}</span>
+                </div>
+                <ChevronRight size={16} color="rgba(255,255,255,0.8)" />
+            </div>
+        </div>
+    );
+
+    const kpiGrid = (
+        <div style={styles.kpiGrid}>
+            {KPI_ITEMS.map(({ key, label, value, icon, bg, color, path }) => (
+                <div key={key} style={styles.kpiCard} onClick={() => navigate(path)}>
+                    <div style={{ ...styles.kpiIconWrap, backgroundColor: bg }}>
+                        {icon}
+                    </div>
+                    <span style={{ ...styles.kpiValue, color }}>
+                        {kpisLoading ? '—' : value}
+                    </span>
+                    <span style={styles.kpiLabel}>{label}</span>
+                </div>
+            ))}
+        </div>
+    );
+
     const mobileContent = (
         <>
             <StoriesRow />
@@ -142,40 +197,11 @@ const Home = () => {
                 <span style={styles.greetingSub}>¿Qué hacemos hoy?</span>
             </div>
 
-            {/* KPIs 2×2 */}
-            <div style={styles.kpiGrid}>
-                {KPI_ITEMS.map(({ key, label, value, icon, bg, color, path }) => (
-                    <div key={key} style={styles.kpiCard} onClick={() => navigate(path)}>
-                        <div style={{ ...styles.kpiIconWrap, backgroundColor: bg }}>
-                            {icon}
-                        </div>
-                        <span style={{ ...styles.kpiValue, color }}>
-                            {kpisLoading ? '—' : value}
-                        </span>
-                        <span style={styles.kpiLabel}>{label}</span>
-                    </div>
-                ))}
-            </div>
+            {/* Hero cards primero — son el CTA principal */}
+            {heroCards}
 
-            {/* Hero cards — Match + Adopción */}
-            <div style={styles.heroRow}>
-                <div style={styles.heroCardMatch} onClick={() => navigate('/match')}>
-                    <div style={styles.heroEmoji}>🐾</div>
-                    <div style={styles.heroText}>
-                        <span style={styles.heroTitle}>Buscar pareja</span>
-                        <span style={styles.heroSub}>Encuentra el match ideal</span>
-                    </div>
-                    <ChevronRight size={18} color="rgba(255,255,255,0.8)" />
-                </div>
-                <div style={styles.heroCardAdopt} onClick={() => navigate('/adoption')}>
-                    <div style={styles.heroEmoji}>🏠</div>
-                    <div style={styles.heroText}>
-                        <span style={styles.heroTitle}>Adoptar</span>
-                        <span style={styles.heroSub}>Dale un hogar a alguien</span>
-                    </div>
-                    <ChevronRight size={18} color="rgba(255,255,255,0.8)" />
-                </div>
-            </div>
+            {/* KPIs 2×2 debajo */}
+            {kpiGrid}
 
             {/* Quick actions secundarias */}
             <div style={styles.quickActions}>
@@ -196,33 +222,8 @@ const Home = () => {
                     <span style={styles.greetingText}>Hola, {firstName} 👋</span>
                     <span style={styles.greetingSub}>¿Qué hacemos hoy?</span>
                 </div>
-                <div style={styles.kpiGrid}>
-                    {KPI_ITEMS.map(({ key, label, value, icon, bg, color, path }) => (
-                        <div key={key} style={styles.kpiCard} onClick={() => navigate(path)}>
-                            <div style={{ ...styles.kpiIconWrap, backgroundColor: bg }}>{icon}</div>
-                            <span style={{ ...styles.kpiValue, color }}>{kpisLoading ? '—' : value}</span>
-                            <span style={styles.kpiLabel}>{label}</span>
-                        </div>
-                    ))}
-                </div>
-                <div style={styles.heroRow}>
-                    <div style={styles.heroCardMatch} onClick={() => navigate('/match')}>
-                        <div style={styles.heroEmoji}>🐾</div>
-                        <div style={styles.heroText}>
-                            <span style={styles.heroTitle}>Buscar pareja</span>
-                            <span style={styles.heroSub}>Encuentra el match ideal</span>
-                        </div>
-                        <ChevronRight size={18} color="rgba(255,255,255,0.8)" />
-                    </div>
-                    <div style={styles.heroCardAdopt} onClick={() => navigate('/adoption')}>
-                        <div style={styles.heroEmoji}>🏠</div>
-                        <div style={styles.heroText}>
-                            <span style={styles.heroTitle}>Adoptar</span>
-                            <span style={styles.heroSub}>Dale un hogar a alguien</span>
-                        </div>
-                        <ChevronRight size={18} color="rgba(255,255,255,0.8)" />
-                    </div>
-                </div>
+                {heroCards}
+                {kpiGrid}
             </div>
             <div style={styles.desktopSidebar}>
                 <h3 style={styles.sidebarTitle}>Accesos rápidos</h3>
@@ -240,18 +241,20 @@ const Home = () => {
 
     return (
         <div style={styles.container} className="fade-in">
-            {/* AppBar con chat badge */}
+            {/* AppBar: logo+title izquierda, iconos agrupados a la derecha */}
             <div style={styles.appBar}>
                 <img src={logoImg} alt="MatchPetz" style={styles.logoImg} onClick={() => navigate('/home')} />
                 <h2 style={styles.appTitle}>MatchPetz</h2>
-                {/* Chat accesible desde aquí — liberamos la tab de nav para Comunidad */}
-                <button style={styles.chatBtn} onClick={() => navigate('/inbox')}>
-                    <MessageSquare size={22} color="var(--color-text-light)" />
-                    {unreadChats > 0 && (
-                        <span style={styles.chatBadge}>{unreadChats > 9 ? '9+' : unreadChats}</span>
-                    )}
-                </button>
-                <NotificationBell />
+                {/* Grupo de iconos pegados a la derecha */}
+                <div style={styles.appBarIcons}>
+                    <button style={styles.chatBtn} onClick={() => navigate('/inbox')}>
+                        <MessageSquare size={22} color="var(--color-text-light)" />
+                        {unreadChats > 0 && (
+                            <span style={styles.chatBadge}>{unreadChats > 9 ? '9+' : unreadChats}</span>
+                        )}
+                    </button>
+                    <NotificationBell />
+                </div>
             </div>
 
             {isMobile ? mobileContent : desktopContent}
@@ -273,6 +276,12 @@ const styles = {
         alignItems: 'center',
         padding: '0.25rem 0 0.75rem',
         gap: '0.5rem',
+    },
+    // Agrupa chat + bell pegados a la derecha — sin gap extra entre ellos
+    appBarIcons: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.1rem',
     },
     logoImg: {
         width: 36, height: 36,
@@ -362,40 +371,40 @@ const styles = {
         fontWeight: 500,
         color: 'var(--color-text-light)',
     },
-    // ── Hero cards ──
+    // ── Hero cards — compactas para no dominar la pantalla ──
     heroRow: {
         display: 'flex',
-        gap: '0.75rem',
-        marginBottom: '1rem',
+        gap: '0.65rem',
+        marginBottom: '0.85rem',
     },
     heroCardMatch: {
         flex: 1,
         background: 'linear-gradient(135deg, #ee9d2b, #ffb703)',
-        borderRadius: 20,
-        padding: '1rem 0.9rem',
+        borderRadius: 18,
+        padding: '0.7rem 0.75rem',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.6rem',
+        gap: '0.5rem',
         cursor: 'pointer',
-        boxShadow: '0 6px 20px rgba(238,157,43,0.35)',
-        minHeight: 72,
+        boxShadow: '0 4px 16px rgba(238,157,43,0.3)',
+        minHeight: 58,
     },
     heroCardAdopt: {
         flex: 1,
         background: 'linear-gradient(135deg, #e8567a, #f472b6)',
-        borderRadius: 20,
-        padding: '1rem 0.9rem',
+        borderRadius: 18,
+        padding: '0.7rem 0.75rem',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.6rem',
+        gap: '0.5rem',
         cursor: 'pointer',
-        boxShadow: '0 6px 20px rgba(232,86,122,0.3)',
-        minHeight: 72,
+        boxShadow: '0 4px 16px rgba(232,86,122,0.25)',
+        minHeight: 58,
     },
-    heroEmoji: { fontSize: '1.5rem', flexShrink: 0 },
-    heroText: { flex: 1, display: 'flex', flexDirection: 'column', gap: 2 },
-    heroTitle: { color: '#fff', fontWeight: 800, fontSize: '0.92rem' },
-    heroSub:   { color: 'rgba(255,255,255,0.82)', fontSize: '0.7rem', fontWeight: 500 },
+    heroEmoji: { fontSize: '1.3rem', flexShrink: 0 },
+    heroText: { flex: 1, display: 'flex', flexDirection: 'column', gap: 1 },
+    heroTitle: { color: '#fff', fontWeight: 800, fontSize: '0.85rem' },
+    heroSub:   { color: 'rgba(255,255,255,0.82)', fontSize: '0.68rem', fontWeight: 500 },
     // ── Quick actions ──
     quickActions: {
         display: 'flex',
