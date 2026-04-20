@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Heart, PawPrint, Users, User } from 'lucide-react';
+// Phosphor: iconos con peso fill/duotone — mucho más expresivos que los outlines de Lucide
+import { House, Heart, PawPrint, UsersThree, UserCircle } from '@phosphor-icons/react';
 import useIsMobile from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,11 +10,11 @@ import { useAuth } from '../contexts/AuthContext';
 // Match gets the center FAB treatment (orange circle, prominent)
 // Chats moved to AppBar icon on Home — nav slot freed for Comunidad (events + social)
 const NAV_ITEMS = [
-    { path: '/home',      icon: Home,     label: 'Inicio',    isCenter: false },
-    { path: '/adoption',  icon: Heart,    label: 'Adopción',  isCenter: false },
-    { path: '/match',     icon: PawPrint, label: 'Match',     isCenter: true  }, // FAB center
-    { path: '/comunidad', icon: Users,    label: 'Comunidad', isCenter: false },
-    { path: '/profile',   icon: User,     label: 'Perfil',    isCenter: false },
+    { path: '/home',      icon: House,        label: 'Inicio',    isCenter: false },
+    { path: '/adoption',  icon: Heart,        label: 'Adopción',  isCenter: false },
+    { path: '/match',     icon: PawPrint,     label: 'Match',     isCenter: true  }, // FAB center
+    { path: '/comunidad', icon: UsersThree,   label: 'Comunidad', isCenter: false },
+    { path: '/profile',   icon: UserCircle,   label: 'Perfil',    isCenter: false },
 ];
 
 const BottomNav = () => {
@@ -44,10 +45,11 @@ const BottomNav = () => {
                             onClick={() => navigate(itemPath)}
                         >
                             <div style={styles.iconWrap}>
+                                {/* Phosphor: fill=activo/center, regular=inactivo */}
                                 <Icon
                                     size={22}
+                                    weight={isCenter || isActive ? 'fill' : 'regular'}
                                     color={isCenter ? '#fff' : isActive ? 'var(--color-primary)' : 'var(--color-text-light)'}
-                                    fill={isCenter && itemPath === '/match' ? '#fff' : 'none'}
                                 />
                             </div>
                             <span style={{
@@ -79,7 +81,7 @@ const BottomNav = () => {
                                 ...styles.fab,
                                 ...(isActive ? styles.fabActive : {}),
                             }}>
-                                <Icon size={26} color="#fff" fill="#fff" />
+                                <Icon size={26} weight="fill" color="#fff" />
                             </div>
                             <span style={{
                                 ...styles.fabLabel,
@@ -96,13 +98,12 @@ const BottomNav = () => {
                     <button key={itemPath} style={styles.navItem} onClick={() => navigate(itemPath)}>
                         {isActive && <div style={styles.activeIndicator} />}
                         <div style={styles.iconWrap}>
+                            {/* fill activo da feedback inmediato sin necesitar el indicator */}
                             <Icon
                                 size={22}
+                                weight={isActive ? 'fill' : 'regular'}
                                 color={color}
-                                fill={itemPath === '/adoption' && isActive ? 'var(--color-primary)' : 'none'}
                             />
-                            {itemPath === '/inbox' && unreadChats > 0 &&
-                                <span style={styles.badge}>{unreadChats > 9 ? '9+' : unreadChats}</span>}
                         </div>
                         <span style={{ ...styles.navLabel, color, fontWeight: isActive ? '700' : '600' }}>
                             {label}

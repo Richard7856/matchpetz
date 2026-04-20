@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+// Lucide — solo utilitarios pequeños (chevron, chat, etc.)
+import { MessageSquare, ChevronRight } from 'lucide-react';
+// Phosphor — iconos visuales principales (fill/duotone dan profundidad y color)
 import {
-    Heart, ShoppingBag, CalendarCheck, AlertTriangle,
-    MapPin, MessageSquare, ChevronRight, Users, PawPrint
-} from 'lucide-react';
+    Heart, PawPrint, UsersThree, Warning,
+    ShoppingBag, CalendarCheck, MapPin,
+    Dog, House,
+} from '@phosphor-icons/react';
 import useIsMobile from '../hooks/useIsMobile';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -113,34 +117,34 @@ const Home = () => {
 
     const firstName = profile?.display_name?.split(' ')[0] || 'ahí';
 
-    // ── Quick actions (secundarias — core está en hero y nav) ────────────────
+    // ── Quick actions — Phosphor fill, más sólidos y coloridos ──────────────
     const ACTION_ITEMS = [
-        { path: '/alerts',       bg: '#ffebee', icon: <AlertTriangle size={22} color="#e53935" />, label: 'Alertas'  },
-        { path: '/marketplace',  bg: '#e8f5e9', icon: <ShoppingBag   size={22} color="#4caf50" />, label: 'Tienda'   },
-        { path: '/appointments', bg: '#e3f2fd', icon: <CalendarCheck size={22} color="#2196f3" />, label: 'Citas'    },
-        { path: '/map',          bg: '#f3e5f5', icon: <MapPin        size={22} color="#9c27b0" />, label: 'Mapa'     },
+        { path: '/alerts',       bg: '#ffebee', icon: <Warning       size={22} weight="fill" color="#e53935" />, label: 'Alertas' },
+        { path: '/marketplace',  bg: '#e8f5e9', icon: <ShoppingBag   size={22} weight="fill" color="#4caf50" />, label: 'Tienda'  },
+        { path: '/appointments', bg: '#e3f2fd', icon: <CalendarCheck size={22} weight="fill" color="#2196f3" />, label: 'Citas'   },
+        { path: '/map',          bg: '#f3e5f5', icon: <MapPin        size={22} weight="fill" color="#9c27b0" />, label: 'Mapa'    },
     ];
 
-    // ── KPI card definitions ─────────────────────────────────────────────────
+    // ── KPI cards — Phosphor duotone: icono con dos tonos, da profundidad ───
     const KPI_ITEMS = [
         {
             key: 'adoption', label: 'En adopción', value: kpis.adoption,
-            icon: <Heart size={16} color="#e8567a" fill="#e8567a" />,
+            icon: <Heart    size={18} weight="duotone" color="#e8567a" />,
             bg: '#fdf2f8', color: '#e8567a', path: '/adoption',
         },
         {
             key: 'likes', label: 'Likes recibidos', value: kpis.likes,
-            icon: <PawPrint size={16} color="#ee9d2b" fill="#ee9d2b" />,
+            icon: <PawPrint size={18} weight="duotone" color="#ee9d2b" />,
             bg: '#fffbeb', color: '#ee9d2b', path: '/match',
         },
         {
             key: 'followers', label: 'Seguidores', value: kpis.followers,
-            icon: <Users size={16} color="#6366f1" />,
+            icon: <UsersThree size={18} weight="duotone" color="#6366f1" />,
             bg: '#eef2ff', color: '#6366f1', path: '/profile',
         },
         {
             key: 'alerts', label: 'Alertas activas', value: kpis.alerts,
-            icon: <AlertTriangle size={16} color="#ef4444" />,
+            icon: <Warning  size={18} weight="duotone" color="#ef4444" />,
             bg: '#fff1f2', color: '#ef4444', path: '/alerts',
         },
     ];
@@ -154,18 +158,20 @@ const Home = () => {
         <div style={styles.heroRow}>
             {/* minWidth:0 en heroText es crítico — sin él flex no encoge el texto */}
             <div style={styles.heroCardMatch} onClick={() => navigate('/match')}>
-                <div style={styles.heroEmoji}>🐾</div>
+                <PawPrint size={30} weight="duotone" color="rgba(255,255,255,0.95)" style={{ flexShrink: 0 }} />
                 <div style={{ ...styles.heroText, minWidth: 0 }}>
                     <span style={styles.heroTitle}>{matchText.title}</span>
+                    <span style={styles.heroSub}>{matchText.sub}</span>
                 </div>
-                <ChevronRight size={16} color="rgba(255,255,255,0.8)" style={{ flexShrink: 0 }} />
+                <ChevronRight size={16} color="rgba(255,255,255,0.7)" style={{ flexShrink: 0 }} />
             </div>
             <div style={styles.heroCardAdopt} onClick={() => navigate('/adoption')}>
-                <div style={styles.heroEmoji}>🏠</div>
+                <Heart size={30} weight="duotone" color="rgba(255,255,255,0.95)" style={{ flexShrink: 0 }} />
                 <div style={{ ...styles.heroText, minWidth: 0 }}>
                     <span style={styles.heroTitle}>{adoptText.title}</span>
+                    <span style={styles.heroSub}>{adoptText.sub}</span>
                 </div>
-                <ChevronRight size={16} color="rgba(255,255,255,0.8)" style={{ flexShrink: 0 }} />
+                <ChevronRight size={16} color="rgba(255,255,255,0.7)" style={{ flexShrink: 0 }} />
             </div>
         </div>
     );
@@ -387,7 +393,7 @@ const styles = {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
     },
-    // ── Hero cards — compactas para no dominar la pantalla ──
+    // ── Hero cards — prominentes, son el CTA principal ──
     heroRow: {
         display: 'flex',
         gap: '0.65rem',
@@ -396,36 +402,40 @@ const styles = {
     heroCardMatch: {
         flex: 1,
         background: 'linear-gradient(135deg, #ee9d2b, #ffb703)',
-        borderRadius: 18,
-        padding: '0.7rem 0.75rem',
+        borderRadius: 20,
+        padding: '1rem 0.85rem',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: '0.65rem',
         cursor: 'pointer',
-        boxShadow: '0 4px 16px rgba(238,157,43,0.3)',
-        minHeight: 58,
+        boxShadow: '0 6px 20px rgba(238,157,43,0.35)',
+        minHeight: 76,
     },
     heroCardAdopt: {
         flex: 1,
         background: 'linear-gradient(135deg, #e8567a, #f472b6)',
-        borderRadius: 18,
-        padding: '0.7rem 0.75rem',
+        borderRadius: 20,
+        padding: '1rem 0.85rem',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: '0.65rem',
         cursor: 'pointer',
-        boxShadow: '0 4px 16px rgba(232,86,122,0.25)',
-        minHeight: 58,
+        boxShadow: '0 6px 20px rgba(232,86,122,0.3)',
+        minHeight: 76,
     },
-    heroEmoji: { fontSize: '1.3rem', flexShrink: 0 },
-    heroText: { flex: 1, display: 'flex', flexDirection: 'column' },
-    // Título único (sin sub) — wrapping permitido para textos más largos
+    heroText: { flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 },
     heroTitle: {
         color: '#fff',
         fontWeight: 800,
-        fontSize: '0.9rem',
-        lineHeight: 1.25,
+        fontSize: '0.88rem',
+        lineHeight: 1.2,
         wordBreak: 'break-word',
+    },
+    heroSub: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: '0.68rem',
+        fontWeight: 500,
+        lineHeight: 1.2,
     },
     // ── Quick actions ──
     quickActions: {
