@@ -339,9 +339,9 @@ const Empty = ({ text }) => (
     </div>
 );
 
-const BANNER_H = 120;
-const AVATAR_D = 88;
-const AVATAR_OFFSET = AVATAR_D / 2; // cuánto sube el avatar sobre el banner
+const BANNER_H = 108;
+const AVATAR_D = 80;
+const AVATAR_OFFSET = AVATAR_D / 2;
 
 const s = {
     container: {
@@ -367,27 +367,27 @@ const s = {
         display: 'flex',
         justifyContent: 'center',
         marginTop: -(AVATAR_OFFSET),
-        marginBottom: 4,
+        marginBottom: 2,
         position: 'relative',
         zIndex: 2,
     },
     avatarRing: {
-        width: AVATAR_D + 8,
-        height: AVATAR_D + 8,
+        width: AVATAR_D + 6,
+        height: AVATAR_D + 6,
         borderRadius: '50%',
         background: 'linear-gradient(135deg, #ee9d2b, #f472b6)',
         padding: 3,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        boxShadow: '0 3px 14px rgba(0,0,0,0.12)',
     },
     avatar: {
         width: '100%', height: '100%',
         borderRadius: '50%',
         objectFit: 'cover',
-        border: '3px solid #fff',
+        border: '2.5px solid #fff',
     },
     content: {
         flex: 1,
-        padding: '0 1rem 2rem',
+        padding: '0 0.9rem 2rem',
         display: 'flex',
         flexDirection: 'column',
     },
@@ -396,123 +396,122 @@ const s = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.25rem',
-        marginBottom: '1rem',
+        gap: '0.2rem',
+        marginBottom: '0.85rem',
         textAlign: 'center',
     },
     userName: {
-        fontSize: '1.3rem',
+        fontSize: '1.15rem',
         fontWeight: 800,
         color: 'var(--color-text-dark)',
         margin: 0,
     },
     locationRow: {
-        display: 'flex', alignItems: 'center', gap: '0.25rem',
+        display: 'flex', alignItems: 'center', gap: '0.2rem',
     },
     locationText: {
-        fontSize: '0.82rem',
+        fontSize: '0.78rem',
         color: '#9ca3af',
     },
     bio: {
-        fontSize: '0.88rem',
+        fontSize: '0.83rem',
         color: 'var(--color-text-light)',
-        lineHeight: 1.5,
-        maxWidth: 320,
-        margin: '0.25rem 0 0',
+        lineHeight: 1.45,
+        maxWidth: 300,
+        margin: '0.15rem 0 0',
     },
     roleBadges: {
         display: 'flex',
         flexWrap: 'wrap',
-        gap: '0.35rem',
+        gap: '0.3rem',
         justifyContent: 'center',
-        marginTop: '0.35rem',
+        marginTop: '0.3rem',
     },
     roleBadge: {
-        fontSize: '0.72rem',
+        fontSize: '0.68rem',
         fontWeight: 700,
-        padding: '3px 10px',
+        padding: '2px 9px',
         borderRadius: 20,
     },
-    // ── Stats ──
+    // ── Stats — compactos, misma card que en el resto ──
     statsRow: {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fff',
-        borderRadius: 18,
-        padding: '0.85rem 0.5rem',
-        marginBottom: '0.75rem',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+        borderRadius: 16,
+        padding: '0.65rem 0.5rem',
+        marginBottom: '0.65rem',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
     },
     statBox: {
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         flex: 1,
     },
     statValue: {
-        fontSize: '1.15rem', fontWeight: 800,
+        fontSize: '1rem', fontWeight: 800,
         color: 'var(--color-text-dark)', lineHeight: 1,
     },
     statLabel: {
-        fontSize: '0.72rem', color: '#9ca3af', marginTop: 3,
+        fontSize: '0.68rem', color: '#9ca3af', marginTop: 2,
     },
     statDivider: {
-        width: 1, height: 28, backgroundColor: '#f0f0f0',
+        width: 1, height: 22, backgroundColor: '#f0f0f0',
     },
     // ── Social links ──
     socialWrap: {
         display: 'flex',
         justifyContent: 'center',
-        marginBottom: '0.75rem',
+        marginBottom: '0.65rem',
     },
-    // ── Action buttons ──
+    // ── Botones — pill compactos, mismo estilo que el resto de la app ──
     btnRow: {
-        display: 'flex', gap: '0.5rem',
-        marginBottom: '1rem',
+        display: 'flex', gap: '0.4rem',
+        marginBottom: '0.85rem',
+        justifyContent: 'center',
     },
     followBtn: {
-        flex: 1,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
         backgroundColor: 'var(--color-primary)', color: '#fff',
-        border: 'none', padding: '0.75rem', borderRadius: 14,
-        fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+        border: 'none', padding: '0.5rem 1.25rem', borderRadius: 20,
+        fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+        boxShadow: '0 3px 10px rgba(238,157,43,0.3)',
     },
     followingBtn: {
-        flex: 1,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-        backgroundColor: '#f0f0f0', color: 'var(--color-text-dark)',
-        border: 'none', padding: '0.75rem', borderRadius: 14,
-        fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
+        backgroundColor: '#f5f5f5', color: 'var(--color-text-dark)',
+        border: '1.5px solid #e5e7eb', padding: '0.5rem 1.25rem', borderRadius: 20,
+        fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
     },
     msgBtn: {
-        flex: 1,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
         backgroundColor: '#fff', color: 'var(--color-primary)',
-        border: '2px solid var(--color-primary)', padding: '0.75rem', borderRadius: 14,
-        fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+        border: '1.5px solid var(--color-primary)', padding: '0.5rem 1.25rem', borderRadius: 20,
+        fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
     },
-    // ── Tabs ──
+    // ── Tabs — pill style igual que Comunidad ──
     tabBar: {
         display: 'flex',
-        backgroundColor: '#fff',
-        borderRadius: 14,
-        padding: '0.25rem',
-        gap: '0.2rem',
-        marginBottom: '1rem',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        gap: '0.35rem',
+        marginBottom: '0.85rem',
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
     },
     tab: {
-        flex: 1,
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
-        padding: '0.55rem 0.25rem',
-        borderRadius: 10,
-        border: 'none', background: 'none',
-        fontSize: '0.75rem', fontWeight: 600,
+        padding: '0.42rem 0.9rem',
+        borderRadius: 20,
+        border: '1.5px solid #e5e7eb',
+        background: '#fff',
+        fontSize: '0.78rem', fontWeight: 600,
         color: 'var(--color-text-light)',
         cursor: 'pointer', fontFamily: 'inherit',
         whiteSpace: 'nowrap',
+        flexShrink: 0,
     },
     tabActive: {
         backgroundColor: 'var(--color-primary)',
+        borderColor: 'var(--color-primary)',
         color: '#fff',
     },
     // ── Posts grid — 3 columnas tipo Instagram ──
