@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Heart, PawPrint, MessageSquare, User } from 'lucide-react';
+import { Home, Heart, PawPrint, Users, User } from 'lucide-react';
 import useIsMobile from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../supabase';
 
-// Nav order: Inicio | Adopción | ❤️ Match (center FAB) | Chats | Perfil
+// Nav order: Inicio | Adopción | ❤️ Match (center FAB) | Comunidad | Perfil
 // Adopción replaces Descubrir — is a core feature, not just discovery
 // Match gets the center FAB treatment (orange circle, prominent)
+// Chats moved to AppBar icon on Home — nav slot freed for Comunidad (events + social)
 const NAV_ITEMS = [
-    { path: '/home',      icon: Home,           label: 'Inicio',    isCenter: false },
-    { path: '/adoption',  icon: Heart,          label: 'Adopción',  isCenter: false },
-    { path: '/match',     icon: PawPrint,       label: 'Match',     isCenter: true  }, // FAB center
-    { path: '/inbox',     icon: MessageSquare,  label: 'Chats',     isCenter: false },
-    { path: '/profile',   icon: User,           label: 'Perfil',    isCenter: false },
+    { path: '/home',      icon: Home,     label: 'Inicio',    isCenter: false },
+    { path: '/adoption',  icon: Heart,    label: 'Adopción',  isCenter: false },
+    { path: '/match',     icon: PawPrint, label: 'Match',     isCenter: true  }, // FAB center
+    { path: '/comunidad', icon: Users,    label: 'Comunidad', isCenter: false },
+    { path: '/profile',   icon: User,     label: 'Perfil',    isCenter: false },
 ];
 
 const BottomNav = () => {
@@ -22,28 +22,7 @@ const BottomNav = () => {
     const isMobile = useIsMobile();
     const { user } = useAuth();
     const path = location.pathname;
-    const [unreadChats, setUnreadChats] = useState(0);
-
-    useEffect(() => {
-        if (!user) return;
-        const fetchUnread = async () => {
-            const { data } = await supabase
-                .from('conversations')
-                .select('unread_count')
-                .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-                .gt('unread_count', 0);
-            if (data) setUnreadChats(data.reduce((sum, c) => sum + (c.unread_count || 0), 0));
-        };
-        fetchUnread();
-
-        const channel = supabase
-            .channel('bottomnav-unread')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' },
-                () => { fetchUnread(); })
-            .subscribe();
-
-        return () => { supabase.removeChannel(channel); };
-    }, [user]);
+    // Unread chat count removed from BottomNav — chat icon with badge now lives in Home AppBar
 
     // ── Desktop sidebar ────────────────────────────────────────────────────────
     if (!isMobile) {
@@ -70,8 +49,6 @@ const BottomNav = () => {
                                     color={isCenter ? '#fff' : isActive ? 'var(--color-primary)' : 'var(--color-text-light)'}
                                     fill={isCenter && itemPath === '/match' ? '#fff' : 'none'}
                                 />
-                                {itemPath === '/inbox' && unreadChats > 0 &&
-                                    <span style={styles.badge}>{unreadChats > 9 ? '9+' : unreadChats}</span>}
                             </div>
                             <span style={{
                                 ...styles.sidebarLabel,

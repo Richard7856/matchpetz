@@ -55,6 +55,7 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const CreatePost = lazy(() => import('./pages/CreatePost'));
 const Settings = lazy(() => import('./pages/Settings'));
 const PetMatch = lazy(() => import('./pages/PetMatch'));
+const Comunidad = lazy(() => import('./pages/Comunidad'));
 const EditPet = lazy(() => import('./pages/EditPet'));
 const DeleteAccount = lazy(() => import('./pages/DeleteAccount'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
@@ -86,6 +87,7 @@ function AppRoutes() {
             <Route path="/alerts/:id" element={<AlertDetail />} />
             <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
             <Route path="/match" element={<ProtectedRoute><PetMatch /></ProtectedRoute>} />
+            <Route path="/comunidad" element={<ProtectedRoute><Comunidad /></ProtectedRoute>} />
             <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
             <Route path="/services/new" element={<ProtectedRoute><AddService /></ProtectedRoute>} />
             <Route path="/services/:id" element={<ProtectedRoute><ServiceDetail /></ProtectedRoute>} />
