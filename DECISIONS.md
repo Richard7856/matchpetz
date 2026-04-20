@@ -112,4 +112,97 @@ Registro de decisiones técnicas no triviales. Cada entrada explica el contexto,
 
 **Decisión:** Saltar a `versionCode 10` para tener margen. Google Play requiere que cada upload tenga un versionCode estrictamente mayor al anterior.
 
-**Regla:** Antes de cada AAB, verificar el último versionCode en `android/app/build.gradle` e incrementar. Nunca reusar un número aunque el upload haya fallado.
+**Regla:** Antes de cada AAB, verificar el último versionCode en `android/app/build.gradle` e incrementar. Nunca reusar un números aunque el upload haya fallado.
+
+---
+
+## [2026-04-20] BottomNav: reemplazar Chats por Comunidad — chat se mueve al AppBar de Home
+
+**Contexto:** El tab de Chats en BottomNav ocupaba un slot valioso. La página de Comunidad (eventos, feed social) necesitaba visibilidad en la nav. Tener 5 tabs sin el FAB central dejaba poco espacio en móvil.
+
+**Decisión:** Nav order: Inicio | Adopción | ❤️ Match (FAB center) | Comunidad | Perfil. El ícono de chat con badge de no-leídos se movió al AppBar de Home (junto al NotificationBell). Esto libera un slot para Comunidad sin perder acceso a chats.
+
+**Alternativas consideradas:**
+- Mantener Chats en nav y quitar Comunidad — Comunidad es una apuesta de retención (eventos, comunidad), más estratégica que Chats
+- 6 tabs sin FAB — demasiado apretado en móvil, pierde el tratamiento especial de Match
+- Poner Comunidad en un tab secundario dentro de Home — esconde una sección principal
+
+**Riesgos/Limitaciones:**
+- Usuarios habituados al tab de chats tendrán que buscarlo en Home. Mitigado por el badge naranja visible en AppBar.
+- En desktop sidebar los 5 ítems se muestran todos con buen espacio, sin problema.
+
+**Mejoras futuras:** Considerar mover chat al AppBar general (no solo Home) si el feedback indica que cuesta encontrarlo.
+
+---
+
+## [2026-04-20] Phosphor Icons como biblioteca de iconos principal
+
+**Contexto:** Los iconos de Lucide (outline únicamente) se percibían como demasiado simples para la estética de la app. Se necesitaba más expresividad visual, especialmente para el BottomNav activo/inactivo, los hero cards de Home y los KPIs.
+
+**Decisión:** Adoptar `@phosphor-icons/react` para todos los iconos visuales/decorativos. Lucide se mantiene solo para iconos utilitarios (ChevronRight, X, Plus, RotateCcw, EyeOff) donde ya estaba en uso o donde Phosphor no tiene equivalente claro. Regla de uso:
+- `weight="fill"` → estado activo, FAB, botones de acción
+- `weight="duotone"` → iconos sobre fondos blancos/cards (KPIs, hero cards)
+- `weight="regular"` → estado inactivo en nav
+
+**Alternativas consideradas:**
+- `react-icons` — demasiada heterogeneidad de estilos entre familias, difícil mantener consistencia
+- Emojis — no escalables, varían entre plataformas (Android/iOS renderiza diferente)
+- Mantener Lucide — solo tiene `fill` como prop binario, sin duotone ni pesos intermedios
+
+**Riesgos/Limitaciones:**
+- Dos bibliotecas de iconos en el bundle. Aceptable — ambas son tree-shakeable, solo se importa lo que se usa.
+- Phosphor tiene iconos de mascotas (PawPrint, Dog, Cat) pero no todos los específicos que podría necesitar la app.
+
+**Mejoras futuras:** Migrar iconos utilitarios restantes de Lucide a Phosphor cuando se toquen esos componentes, para eventual eliminación de Lucide.
+
+---
+
+## [2026-04-20] Adopción: persistir rechazos/likes en localStorage por usuario
+
+**Contexto:** Los usuarios siempre veían los mismos animales aunque ya los hubieran rechazado. Al volver de la pantalla de chat (después de dar like), el componente se remontaba y mostraba el mismo animal al índice 0.
+
+**Decisión:** Estado de swipes (rejected + liked) persistido en `localStorage` con clave `mp_adopt_seen_${userId}`. En cada mount, `applySeenFilter` filtra el feed excluyendo rechazados y ya likeados. El "bug del remount" se corrige marcando como `liked` en localStorage ANTES de llamar `navigate()`, así cuando el componente se remonta el animal ya está excluido.
+
+**Helpers en módulo (fuera del componente para evitar recreación):**
+```javascript
+const seenKey  = (uid) => `mp_adopt_seen_${uid}`;
+const getSeen  = (uid) => JSON.parse(localStorage.getItem(seenKey(uid)) || '{}');
+const markSeen = (uid, type, id) => { ... };
+const unmarkRejected = (uid, id) => { ... };   // "dar otra oportunidad"
+const clearSeen = (uid) => localStorage.removeItem(seenKey(uid));  // "reiniciar todo"
+```
+
+**Feature adicional:** Botón "Ver rechazados" (EyeOff con badge de conteo) abre un drawer inferior donde el usuario puede dar "Dar otra oportunidad" a animales rechazados. "Reiniciar todo" en empty state limpia el storage y recarga el feed completo.
+
+**Alternativas consideradas:**
+- Tabla `adoption_swipes` en Supabase — requería migración + RLS + query extra. Overkill para v1, y la persistencia entre dispositivos no era un requerimiento.
+- Estado en React (`useRef`) — se pierde al desmontar el componente (exactamente el bug original).
+
+**Riesgos/Limitaciones:**
+- Device-specific: si el usuario cambia de dispositivo, los rechazos no se sincronizan. Aceptable para v1.
+- localStorage tiene límite (~5MB). Con miles de IDs podría ser un problema en usuarios muy activos. Mitigación futura: limpiar automáticamente los más viejos.
+
+---
+
+## [2026-04-20] UserProfile: rediseño Instagram-style, siempre mostrar todos los tabs
+
+**Contexto:** El perfil de usuario era extremadamente básico. No mostraba posts, mascotas, productos ni eventos del usuario. Los tabs eran condicionales (ocultos si no había contenido), lo que confundía al usuario sobre si el perfil tenía esas secciones.
+
+**Decisión:** Rediseño completo:
+- Header: card blanca con avatar 68px (anillo degradado) + nombre alineados a la izquierda, stats row en borde inferior. Sin banner de degradado (se veía fuera del estilo limpio de la app).
+- Botones: Seguir = naranja fill (contraste claro), Mensaje = `#1f2937` dark fill con texto blanco (el texto naranja sobre blanco era ilegible en la versión anterior).
+- Tabs SIEMPRE visibles (Posts | Mascotas | Adopción | Eventos | Tienda) — si no hay contenido, se muestra un mensaje "Sin X registrados" en vez de ocultar el tab.
+- Datos cargados en paralelo con `Promise.all` (9 queries: posts, events, products, pets, adoption_pets, follow status, follower count, following count, profile).
+- Post grid: 3 columnas con `aspectRatio: 1`, gap 2px (estilo Instagram).
+- ReviewSection completamente eliminado — mejor comentar fotos/posts que reseñas genéricas.
+
+**Por qué tabs siempre visibles:** Ocultar tabs cuando no hay contenido crea incertidumbre — el usuario no sabe si la sección existe o está vacía. "Sin mascotas registradas" comunica claramente que la sección existe pero está vacía, y potencialmente invita al usuario a agregar contenido propio.
+
+**Alternativas consideradas:**
+- Banner de degradado (naranja→rosa→morado) — el usuario lo rechazó explícitamente ("no le veo el caso")
+- Mantener ReviewSection — desconectado del flujo social. Se priorizó ver posts/mascotas/etc.
+- Tabs condicionales — confunde al usuario, según feedback directo
+
+**Riesgos/Limitaciones:**
+- 9 queries en paralelo en cada visita al perfil. Con Supabase connection pooling es aceptable, pero si se convierte en problema se puede añadir caching o reducir queries con joins.
+- `adoption_pets` tabla asumida con columnas `user_id`, `status`, `name`, `breed`, `image_url`. Verificar que el schema coincide.

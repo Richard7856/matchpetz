@@ -84,12 +84,24 @@ import { getAvatarUrl } from '../utils/avatar';
 import { ROLE_CONFIG } from '../constants/roles';
 ```
 
+### Icon Libraries
+
+Two icon libraries coexist — use the right one for the right job:
+
+| Library | Package | Use for |
+|---------|---------|---------|
+| **Phosphor** | `@phosphor-icons/react` | All visual/decorative icons: nav, hero cards, KPIs, quick actions. Use `weight="fill"` (active/FAB), `weight="duotone"` (cards/white bg), `weight="regular"` (inactive nav) |
+| **Lucide** | `lucide-react` | Utility icons only: ChevronRight, X, Plus, RotateCcw, EyeOff, Grid3x3, Calendar, etc. |
+
+Never mix styles — Phosphor for anything the user "sees as UI", Lucide for functional chrome.
+
 ### Reusable Components (`src/components/`)
 
 | Component | Purpose |
 |-----------|---------|
 | `AppBar.jsx` | Top navigation bar with back button and title |
-| `BottomNav.jsx` | Persistent bottom tab bar (mobile/tablet) / sidebar (desktop ≥1024px) |
+| `BottomNav.jsx` | Persistent bottom tab bar (mobile/tablet) / sidebar (desktop ≥1024px). Nav order: Inicio · Adopción · Match (FAB center) · Comunidad · Perfil |
+| `StoriesRow.jsx` | Instagram-style stories row with upload. Styled as a card (borderRadius 20, boxShadow). |
 | `AuthRedirect.jsx` | Root route — session check + redirect (handles PASSWORD_RECOVERY event) |
 | `ProtectedRoute.jsx` | Auth guard wrapper with spinner |
 | `MultiImageUpload.jsx` | Multiple image upload with reordering, main image badge, Supabase Storage integration |
@@ -145,6 +157,7 @@ All tables use Row-Level Security: public read, authenticated write, users can o
 | `/reset-password` | `ResetPassword` | **No** (recovery session from email) |
 | `/complete-profile` | `CompleteProfile` | Yes |
 | `/home` | `Home` | Yes |
+| `/comunidad` | `Comunidad` (eventos + feed social) | Yes |
 | `/discover` | `Discover` (tabs: Personas/Negocios) | Yes |
 | `/social` | `Social` (feed) | Yes |
 | `/explore` | `Explore` | Yes |
@@ -261,6 +274,41 @@ Used by: `AddAdoptionPet`, `AddProduct`, `AddService`, `AddPet`, `CreateEvent`
 
 Forms store `images` array and set `image_url: images[0]` for backward compatibility with single-image views.
 
+### Home Page Structure (`src/pages/Home.jsx`)
+
+Section order (top → bottom):
+1. **StoriesRow** — stories card with borderRadius 20
+2. **Greeting** — single line: "Hola, {name} · {rotating_text_today}"
+3. **Hero cards** — Adopción + Match, side by side. Texts rotate randomly each visit from arrays `ADOPT_TEXTS` / `MATCH_TEXTS`. Phosphor icons `weight="duotone"` size 30.
+4. **KPI grid** — compact horizontal cards (icon left, text right). Phosphor `weight="duotone"` size 18.
+5. **Quick actions** — Alertas, Mapa, Marketplace, Citas. Phosphor `weight="fill"` size 22.
+6. **Eventos banner** — CTA at bottom linking to `/comunidad`. CalendarCheck icon + ChevronRight.
+
+**AppBar:** Chat icon (MessageSquare from Lucide) + NotificationBell, both grouped right.
+- Chat icon shows unread badge (real-time subscription to `messages` table)
+- Chat navigates to `/inbox`
+
+### Adoption Persistence Pattern (`src/pages/Adoption.jsx`)
+
+Swipe state (rejected + liked IDs) is persisted in `localStorage` per user:
+- Key: `mp_adopt_seen_${userId}`
+- Value: `{ rejected: [ids], liked: [ids] }`
+- Loaded on mount via `applySeenFilter(allPets)` — filters main feed, populates `rejectedPets` array
+- **Critical order for right swipe:** call `markSeen(liked)` BEFORE `navigate()`. On remount, the pet is already excluded. Marking AFTER navigate = same pet shows again at index 0.
+- "Ver rechazados" button (EyeOff + red badge) opens bottom drawer with option to restore individual pets
+- "Reiniciar todo" (empty state) calls `clearSeen()` + re-applies filter
+
+### UserProfile Layout (`src/pages/UserProfile.jsx`)
+
+Instagram-style redesign:
+- **Header card:** white `borderRadius: 20` card. Avatar 68px with gradient ring, left-aligned next to name. No banner gradient.
+- **Buttons:** Seguir = orange fill (`var(--color-primary)`, white text). Mensaje = `#1f2937` dark fill (white text). Both `borderRadius: 20, padding: '0.5rem 1.1rem'`.
+- **Stats row:** inline at bottom of header, `borderTop: '1px solid #f5f5f5'`
+- **Tabs:** ALL 5 always visible regardless of content — Posts | Mascotas | Adopción | Eventos | Tienda. Show "Sin X registrados" empty state instead of hiding tab.
+- **Post grid:** 3-col, `aspectRatio: '1'`, gap 2px
+- **Data loading:** 9 queries in `Promise.all` on mount (posts, events, products, pets, adoption_pets, follow status, followers, following, profile)
+- **ReviewSection removed** — replaced by content tabs
+
 ### Common Patterns
 
 - **Double-submit prevention:** Buttons use `loading` state to disable during async operations.
@@ -268,6 +316,7 @@ Forms store `images` array and set `image_url: images[0]` for backward compatibi
 - **Lazy image loading:** Use `loading="lazy"` on `<img>` tags for lists/grids.
 - **Lazy conversation creation:** Chat conversations created on first click, not upfront.
 - **Timezone-safe date comparison:** Parse dates with `new Date(dateStr + 'T12:00:00')` to avoid off-by-one errors from UTC conversion.
+- **localStorage swipe state:** Adoption uses `mp_adopt_seen_${userId}` in localStorage. Mark seen BEFORE navigate to prevent remount bugs.
 
 ### Sponsored Ads System (Planned — not yet implemented in UI)
 
