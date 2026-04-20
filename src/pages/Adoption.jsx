@@ -1,24 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, X, Star, SlidersHorizontal, MapPin, Info, Plus, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, X, Star, SlidersHorizontal, MapPin, Info, Plus, MessageCircle, ChevronLeft, ChevronRight, RotateCcw, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
 import AppBar from '../components/AppBar';
 import { PET_TYPE_FILTERS } from '../constants/petTypes';
 import { sendPush } from '../utils/pushNotify';
 
+// ── localStorage helpers — persistir rechazados/likes por usuario ──────────
+// Clave por usuario para que no se mezclen sesiones distintas
+const seenKey  = (uid) => `mp_adopt_seen_${uid}`;
+const getSeen  = (uid) => { try { return JSON.parse(localStorage.getItem(seenKey(uid)) || '{}'); } catch { return {}; } };
+const markSeen = (uid, type, id) => {
+    const d = getSeen(uid);
+    const arr = d[type] || [];
+    if (!arr.includes(id)) arr.push(id);
+    d[type] = arr;
+    localStorage.setItem(seenKey(uid), JSON.stringify(d));
+};
+const unmarkRejected = (uid, id) => {
+    const d = getSeen(uid);
+    d.rejected = (d.rejected || []).filter(x => x !== id);
+    localStorage.setItem(seenKey(uid), JSON.stringify(d));
+};
+const clearSeen = (uid) => localStorage.removeItem(seenKey(uid));
+
 const Adoption = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const [pets, setPets] = useState([]);
+    const [pets, setPets] = useState([]);           // feed principal (sin vistos)
+    const [rejectedPets, setRejectedPets] = useState([]); // los que dijo "no"
+    const [allFetched, setAllFetched] = useState([]); // todos los del fetch (para rebuild)
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
+    const [showRejected, setShowRejected] = useState(false);
     const [loading, setLoading] = useState(true);
     const [typeFilter, setTypeFilter] = useState('todos');
     const [genderFilter, setGenderFilter] = useState('todos');
     const [contactingId, setContactingId] = useState(null);
     const [imgIdx, setImgIdx] = useState(0);
+
+    // Separa el feed principal de los rechazados usando el localStorage del usuario
+    const applySeenFilter = useCallback((all) => {
+        if (!user) { setPets(all); return; }
+        const seen   = getSeen(user.id);
+        const rejSet = new Set(seen.rejected || []);
+        const likedSet = new Set(seen.liked || []);
+        // Feed: excluye rechazados, likes y las propias mascotas
+        setPets(all.filter(p => !rejSet.has(p.id) && !likedSet.has(p.id) && p.user_id !== user.id));
+        // Drawer: solo rechazados (con datos completos para mostrar)
+        setRejectedPets(all.filter(p => rejSet.has(p.id)));
+    }, [user]);
 
     useEffect(() => {
         const load = async () => {
@@ -28,87 +61,106 @@ const Adoption = () => {
                 .eq('status', 'disponible')
                 .order('created_at', { ascending: false })
                 .limit(50);
-            if (!error && data) setPets(data);
+            if (!error && data) {
+                setAllFetched(data);
+                applySeenFilter(data);
+            }
             setLoading(false);
         };
         load();
-    }, []);
+    }, [applySeenFilter]);
 
-    const handleSwipe = async (dir) => {
-        if (currentIndex >= filteredPets.length) return;
-        const pet = filteredPets[currentIndex];
-
-        // On "like" (right swipe / heart), start chat with owner
-        if (dir === 'right' && user && pet.user_id && pet.user_id !== user.id) {
-            setContactingId(pet.id);
-            try {
-                // Check if conversation already exists
-                const { data: existing } = await supabase
-                    .from('conversations')
-                    .select('id')
-                    .or(
-                        `and(user1_id.eq.${user.id},user2_id.eq.${pet.user_id}),and(user1_id.eq.${pet.user_id},user2_id.eq.${user.id})`
-                    )
-                    .maybeSingle();
-
-                if (existing) {
-                    navigate(`/chat/${existing.id}`);
-                    return;
-                }
-
-                // Get owner name
-                const { data: ownerProfile } = await supabase
-                    .from('profiles')
-                    .select('display_name')
-                    .eq('id', pet.user_id)
-                    .maybeSingle();
-
-                const { data: conv } = await supabase
-                    .from('conversations')
-                    .insert({
-                        user1_id: user.id,
-                        user2_id: pet.user_id,
-                        participant_name: ownerProfile?.display_name || 'Usuario',
-                        last_message: `Me interesa adoptar a ${pet.name}`,
-                    })
-                    .select('id')
-                    .single();
-
-                if (conv) {
-                    // Send initial message
-                    await supabase.from('messages').insert({
-                        conversation_id: conv.id,
-                        sender_id: user.id,
-                        content: `Hola! Me interesa adoptar a ${pet.name} 🐾`,
-                    });
-                    // Notify pet owner — in-app + push (fire-and-forget)
-                    const notifTitle = `Alguien esta interesado en adoptar a ${pet.name}`;
-                    const notifBody = 'Tienes un nuevo mensaje sobre tu mascota en adopcion';
-                    supabase.from('notifications').insert({
-                        user_id: pet.user_id,
-                        type: 'adoption',
-                        title: notifTitle,
-                        body: notifBody,
-                        entity_id: conv.id,
-                        from_user_id: user.id,
-                    });
-                    sendPush(pet.user_id, notifTitle, notifBody, { type: 'adoption', entity_id: conv.id });
-                    navigate(`/chat/${conv.id}`);
-                    return;
-                }
-            } catch (err) {
-                alert('No se pudo iniciar el chat. Intenta de nuevo.');
-            } finally {
-                setContactingId(null);
-            }
-        }
-
+    const advanceCard = (dir) => {
         setDirection(dir);
         setTimeout(() => {
             setCurrentIndex(prev => prev + 1);
             setImgIdx(0);
             setDirection(null);
         }, 300);
+    };
+
+    const handleSwipe = async (dir) => {
+        if (currentIndex >= filteredPets.length) return;
+        const pet = filteredPets[currentIndex];
+
+        // ── Rechazo (izquierda) — guardar en localStorage ─────────────────
+        if (dir === 'left') {
+            if (user) markSeen(user.id, 'rejected', pet.id);
+            advanceCard(dir);
+            return;
+        }
+
+        // ── Super like (arriba) — avanza sin guardar como like permanente ──
+        if (dir === 'up') {
+            advanceCard(dir);
+            return;
+        }
+
+        // ── Like (derecha) — marcar como visto + abrir chat con el dueño ──
+        if (dir === 'right') {
+            // Marcar ANTES de navegar: cuando vuelva, el pet ya no estará en el feed
+            if (user) markSeen(user.id, 'liked', pet.id);
+
+            if (user && pet.user_id && pet.user_id !== user.id) {
+                setContactingId(pet.id);
+                try {
+                    const { data: existing } = await supabase
+                        .from('conversations')
+                        .select('id')
+                        .or(
+                            `and(user1_id.eq.${user.id},user2_id.eq.${pet.user_id}),and(user1_id.eq.${pet.user_id},user2_id.eq.${user.id})`
+                        )
+                        .maybeSingle();
+
+                    if (existing) {
+                        advanceCard(dir);
+                        navigate(`/chat/${existing.id}`);
+                        return;
+                    }
+
+                    const { data: ownerProfile } = await supabase
+                        .from('profiles')
+                        .select('display_name')
+                        .eq('id', pet.user_id)
+                        .maybeSingle();
+
+                    const { data: conv } = await supabase
+                        .from('conversations')
+                        .insert({
+                            user1_id: user.id,
+                            user2_id: pet.user_id,
+                            participant_name: ownerProfile?.display_name || 'Usuario',
+                            last_message: `Me interesa adoptar a ${pet.name}`,
+                        })
+                        .select('id')
+                        .single();
+
+                    if (conv) {
+                        await supabase.from('messages').insert({
+                            conversation_id: conv.id,
+                            sender_id: user.id,
+                            content: `Hola! Me interesa adoptar a ${pet.name} 🐾`,
+                        });
+                        const notifTitle = `Alguien está interesado en adoptar a ${pet.name}`;
+                        const notifBody  = 'Tienes un nuevo mensaje sobre tu mascota en adopción';
+                        supabase.from('notifications').insert({
+                            user_id: pet.user_id, type: 'adoption',
+                            title: notifTitle, body: notifBody,
+                            entity_id: conv.id, from_user_id: user.id,
+                        });
+                        sendPush(pet.user_id, notifTitle, notifBody, { type: 'adoption', entity_id: conv.id });
+                        advanceCard(dir);
+                        navigate(`/chat/${conv.id}`);
+                        return;
+                    }
+                } catch {
+                    alert('No se pudo iniciar el chat. Intenta de nuevo.');
+                } finally {
+                    setContactingId(null);
+                }
+            }
+            advanceCard(dir);
+        }
     };
 
     const filteredPets = pets.filter((p) => {
@@ -139,6 +191,13 @@ const Adoption = () => {
                         <button style={styles.iconBtn} onClick={() => navigate('/adoption/new')}>
                             <Plus size={24} color="var(--color-text-dark)" />
                         </button>
+                        {/* Ver rechazados — solo visible si hay alguno */}
+                        {rejectedPets.length > 0 && (
+                            <button style={styles.iconBtn} onClick={() => setShowRejected(true)}>
+                                <EyeOff size={22} color="var(--color-text-light)" />
+                                <span style={styles.rejBadge}>{rejectedPets.length}</span>
+                            </button>
+                        )}
                         <button style={styles.iconBtn} onClick={() => setShowFilters(true)}>
                             <SlidersHorizontal size={24} color="var(--color-text-dark)" />
                         </button>
@@ -211,9 +270,26 @@ const Adoption = () => {
                             <Heart size={40} color="var(--color-text-light)" />
                         </div>
                         <h3>¡No hay más peludos por ahora!</h3>
-                        <p>Vuelve más tarde o ajusta tus filtros</p>
-                        <button style={{ ...styles.primaryBtn, marginTop: '2rem' }} onClick={() => setCurrentIndex(0)}>
-                            Volver a empezar
+                        <p style={{ color: 'var(--color-text-light)', fontSize: '0.9rem' }}>
+                            Vuelve más tarde o reinicia para ver desde el principio
+                        </p>
+                        {rejectedPets.length > 0 && (
+                            <button
+                                style={{ ...styles.secondaryBtn, marginTop: '1rem' }}
+                                onClick={() => setShowRejected(true)}
+                            >
+                                <EyeOff size={16} /> Ver {rejectedPets.length} que descartaste
+                            </button>
+                        )}
+                        <button
+                            style={{ ...styles.primaryBtn, marginTop: '0.75rem' }}
+                            onClick={() => {
+                                if (user) clearSeen(user.id);
+                                applySeenFilter(allFetched);
+                                setCurrentIndex(0);
+                            }}
+                        >
+                            <RotateCcw size={16} /> Reiniciar todo
                         </button>
                     </div>
                 )}
@@ -242,6 +318,56 @@ const Adoption = () => {
                     {contactingId ? <MessageCircle size={28} /> : <Heart size={32} />}
                 </button>
             </div>
+
+            {/* ── Drawer: mascotas rechazadas ───────────────────────────── */}
+            {showRejected && (
+                <div style={styles.modalOverlay} onClick={() => setShowRejected(false)}>
+                    <div style={styles.modalContent} className="fade-in" onClick={e => e.stopPropagation()}>
+                        <div style={styles.modalHeader}>
+                            <h3 style={styles.modalTitle}>Descartados ({rejectedPets.length})</h3>
+                            <button style={styles.iconBtn} onClick={() => setShowRejected(false)}>
+                                <X size={24} color="var(--color-text-dark)" />
+                            </button>
+                        </div>
+                        <p style={{ fontSize: '0.82rem', color: 'var(--color-text-light)', margin: '0 0 1rem' }}>
+                            Toca "Dar otra oportunidad" para volver a ver una mascota en el feed principal.
+                        </p>
+                        <div style={styles.rejGrid}>
+                            {rejectedPets.map(p => {
+                                const img = p.images?.[0] || p.image_url || '';
+                                return (
+                                    <div key={p.id} style={styles.rejCard}>
+                                        <img
+                                            src={img}
+                                            alt={p.name}
+                                            style={styles.rejImg}
+                                            loading="lazy"
+                                            onClick={() => navigate(`/adoption/${p.id}`)}
+                                        />
+                                        <div style={styles.rejInfo}>
+                                            <span style={styles.rejName}>{p.name}</span>
+                                            <span style={styles.rejBreed}>{p.breed || p.type}</span>
+                                        </div>
+                                        <button
+                                            style={styles.unrejBtn}
+                                            onClick={() => {
+                                                if (user) unmarkRejected(user.id, p.id);
+                                                // Quitar del drawer y volver al feed
+                                                const updated = rejectedPets.filter(x => x.id !== p.id);
+                                                setRejectedPets(updated);
+                                                setPets(prev => [p, ...prev]);
+                                                setCurrentIndex(0);
+                                            }}
+                                        >
+                                            Dar otra oportunidad
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showFilters && (
                 <div style={styles.modalOverlay}>
@@ -310,7 +436,8 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-        padding: 0
+        padding: 0,
+        position: 'relative', // necesario para el badge de rechazados
     },
     imgIndicators: {
         position: 'absolute',
@@ -515,10 +642,96 @@ const styles = {
         backgroundColor: 'var(--color-primary)',
         color: '#fff',
         border: 'none',
-        padding: '1rem 2rem',
+        padding: '0.75rem 1.75rem',
         borderRadius: '50px',
-        fontSize: '1.1rem',
+        fontSize: '0.95rem',
         fontWeight: 'bold',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+    },
+    secondaryBtn: {
+        backgroundColor: '#fff',
+        color: 'var(--color-text-light)',
+        border: '1.5px solid #e0e0e0',
+        padding: '0.65rem 1.5rem',
+        borderRadius: '50px',
+        fontSize: '0.88rem',
+        fontWeight: '600',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+    },
+    // ── Rejected badge en el botón del AppBar ──
+    rejBadge: {
+        position: 'absolute',
+        top: 4, right: 4,
+        minWidth: 14, height: 14,
+        borderRadius: 7,
+        backgroundColor: '#ff4b4b',
+        color: '#fff',
+        fontSize: '0.55rem',
+        fontWeight: 800,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0 2px',
+        lineHeight: 1,
+    },
+    // ── Rejected drawer ──
+    rejGrid: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem',
+    },
+    rejCard: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        padding: '0.5rem',
+        backgroundColor: '#fafafa',
+        borderRadius: 14,
+        border: '1px solid #f0f0f0',
+    },
+    rejImg: {
+        width: 56, height: 56,
+        borderRadius: 10,
+        objectFit: 'cover',
+        flexShrink: 0,
+        cursor: 'pointer',
+    },
+    rejInfo: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        minWidth: 0,
+    },
+    rejName: {
+        fontSize: '0.9rem',
+        fontWeight: 700,
+        color: 'var(--color-text-dark)',
+    },
+    rejBreed: {
+        fontSize: '0.75rem',
+        color: 'var(--color-text-light)',
+    },
+    unrejBtn: {
+        flexShrink: 0,
+        background: '#fff8ee',
+        border: '1.5px solid #fde8b8',
+        color: '#b36d00',
+        fontSize: '0.75rem',
+        fontWeight: 700,
+        padding: '0.4rem 0.65rem',
+        borderRadius: 10,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        whiteSpace: 'nowrap',
     },
     modalOverlay: {
         position: 'fixed',
