@@ -118,12 +118,13 @@ const UserProfile = () => {
 
     const isSelf = user?.id === id;
 
+    // Todos los tabs siempre visibles — mejor mostrar "Sin registro" que ocultar la sección
     const TABS = [
-        { key: 'posts',    label: 'Posts',     icon: <Grid3x3 size={14} /> },
-        { key: 'mascotas', label: 'Mascotas',  icon: <PawPrint size={14} weight="fill" /> },
-        ...(adoptionPets.length > 0 ? [{ key: 'adopcion', label: 'Adopción', icon: <HeartLucide size={14} /> }] : []),
-        ...(events.length > 0       ? [{ key: 'eventos',  label: 'Eventos',  icon: <Calendar size={14} /> }] : []),
-        ...(products.length > 0     ? [{ key: 'tienda',   label: 'Tienda',   icon: <Storefront size={14} weight="fill" /> }] : []),
+        { key: 'posts',    label: 'Posts',    icon: <Grid3x3 size={14} /> },
+        { key: 'mascotas', label: 'Mascotas', icon: <PawPrint size={14} weight="fill" /> },
+        { key: 'adopcion', label: 'Adopción', icon: <HeartLucide size={14} /> },
+        { key: 'eventos',  label: 'Eventos',  icon: <Calendar size={14} /> },
+        { key: 'tienda',   label: 'Tienda',   icon: <Storefront size={14} weight="fill" /> },
     ];
 
     return (
