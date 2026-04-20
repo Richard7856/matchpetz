@@ -139,14 +139,13 @@ const StoriesRow = () => {
 const s = {
     container: {
         display: 'flex',
-        gap: '1rem',
-        padding: '0.85rem 1rem',
+        gap: '0.85rem',           // era 1rem
+        padding: '0.7rem 0.9rem', // era 0.85rem 1rem — ~10% menos
         overflowX: 'auto',
         backgroundColor: 'var(--color-background, #fdfdfd)',
         borderBottom: 'none',
         WebkitOverflowScrolling: 'touch',
         scrollbarWidth: 'none',
-        // Bordes redondeados para que armonice con el resto del diseño
         borderRadius: 20,
         boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
         marginBottom: '0.85rem',
@@ -155,14 +154,14 @@ const s = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '6px',
+        gap: '5px',       // era 6px
         cursor: 'pointer',
         flexShrink: 0,
-        width: '72px',
+        width: '60px',    // era 72px
     },
     avatarRing: {
-        width: '66px',
-        height: '66px',
+        width: '58px',    // era 66px
+        height: '58px',
         borderRadius: '50%',
         padding: '3px',
         position: 'relative',
@@ -203,7 +202,7 @@ const s = {
         color: 'var(--color-text-dark)',
         fontWeight: '600',
         textAlign: 'center',
-        maxWidth: '72px',
+        maxWidth: '60px',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',

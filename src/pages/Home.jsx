@@ -220,6 +220,13 @@ const Home = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Acceso rápido a Eventos — al fondo de la home */}
+            <button style={styles.eventsBanner} onClick={() => navigate('/comunidad')}>
+                <CalendarCheck size={20} weight="fill" color="#ee9d2b" />
+                <span style={styles.eventsBannerText}>Ver eventos de la comunidad</span>
+                <ChevronRight size={16} color="#ee9d2b" />
+            </button>
         </>
     );
 
@@ -464,6 +471,27 @@ const styles = {
         fontSize: '0.75rem',
         fontWeight: 600,
         color: 'var(--color-text-dark)',
+    },
+    // ── Eventos banner ──
+    eventsBanner: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.6rem',
+        marginTop: '0.75rem',
+        padding: '0.8rem 1rem',
+        backgroundColor: '#fff8ee',
+        border: '1.5px solid #fde8b8',
+        borderRadius: 16,
+        cursor: 'pointer',
+        width: '100%',
+        textAlign: 'left',
+        fontFamily: 'inherit',
+    },
+    eventsBannerText: {
+        flex: 1,
+        fontSize: '0.88rem',
+        fontWeight: 700,
+        color: '#b36d00',
     },
     // ── Desktop ──
     desktopLayout: { display: 'flex', flex: 1, gap: '1.5rem', alignItems: 'flex-start' },
